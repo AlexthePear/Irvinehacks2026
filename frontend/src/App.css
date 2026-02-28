@@ -1,4 +1,6 @@
 #App {
+    display: flex;
+    flex-direction: column;
     min-height: 100vh;
     padding: 48px 20px;
     box-sizing: border-box;
@@ -11,6 +13,46 @@
         linear-gradient(135deg, #070b16 0%, #12091f 45%, #050814 100%);
     color: #eefcff;
 }
+
+.remove-hobby-button {
+    margin: 5px;
+    border-radius: 100px;
+    border: 1px solid rgba(0, 255, 240, 0.35); /* subtle neon outline */
+    background: rgba(4, 8, 20, 0.9); /* dark panel background */
+    color: #80fff0; /* soft neon cyan text */
+}
+
+.add-hobby-button {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 10px 18px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 255, 240, 0.35); /* subtle neon outline */
+  background: rgba(4, 8, 20, 0.9); /* dark panel background */
+  color: #80fff0; /* soft neon cyan text */
+  font-weight: bold;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  text-shadow: 0 0 3px rgba(128, 255, 240, 0.5);
+}
+
+.add-hobby-button:hover {
+  transform: translateY(-2px);
+  border-color: #00fff0;
+  box-shadow:
+    0 0 8px rgba(0, 255, 240, 0.7),
+    0 0 5px rgba(255, 0, 140, 0.4);
+}
+
+.add-hobby-button:active {
+  transform: translateY(0);
+  box-shadow:
+    0 0 4px rgba(0, 255, 240, 0.5),
+    0 0 3px rgba(255, 0, 140, 0.3);
+}
+
+
 
 .panel-shell {
     width: min(960px, 100%);
@@ -73,6 +115,10 @@
     box-shadow:
         inset 0 0 0 1px rgba(0, 255, 240, 0.08),
         inset 0 18px 32px rgba(0, 0, 0, 0.2);
+}
+
+.settings-window input {
+    margin-bottom: 15px;
 }
 
 .settings-window::-webkit-scrollbar {

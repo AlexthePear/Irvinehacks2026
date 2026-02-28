@@ -1,0 +1,97 @@
+.live-salary-container {
+  max-width: 400px;
+  margin: 20px auto;
+  text-align: center;
+  font-family: sans-serif;
+}
+
+.salary-boxes {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+.salary-box {
+  background-color: rgba(255, 255, 255, 0.05); /* almost transparent for neon glow effect */
+  padding: 20px;
+  border-radius: 12px;
+  min-width: 140px;
+  text-align: center;
+  box-shadow: 0 0 15px rgba(0,255,240,0.2), 0 0 15px rgba(255,0,140,0.15); /* neon-ish glow */
+  backdrop-filter: blur(6px); /* frosted glass effect */
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.salary-box:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 25px rgba(0,255,240,0.4), 0 0 25px rgba(255,0,140,0.3);
+}
+
+.salary-box h4 {
+  margin-bottom: 5px;
+  font-size: 0.9rem;
+  color: #80fff0;
+}
+
+.salary-box p {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin: 0;
+}
+
+.toggle-switch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+  font-size: 0.9rem;
+}
+
+/* Slide toggle */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0;
+  right: 0; bottom: 0;
+  background-color: #00fff0;
+  transition: 0.4s;
+  border-radius: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+
+input:checked + .slider {
+  background-color: lightpink;
+}
+
+
+input:checked + .slider:before {
+  transform: translateX(26px);
+}
