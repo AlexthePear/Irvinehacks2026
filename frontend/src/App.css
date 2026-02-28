@@ -1,60 +1,119 @@
+/* ========================= */
+/* CYBERPUNK ANIMATED BACKGROUND */
+/* ========================= */
+
 #App {
+    position: relative;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
     padding: 48px 20px;
     box-sizing: border-box;
-    display: flex;
     align-items: center;
     justify-content: center;
+    overflow: hidden;
+
     background:
         radial-gradient(circle at top right, rgba(0, 255, 240, 0.18), transparent 35%),
         radial-gradient(circle at bottom left, rgba(255, 0, 140, 0.2), transparent 40%),
         linear-gradient(135deg, #070b16 0%, #12091f 45%, #050814 100%);
+    
     color: #eefcff;
 }
 
-.remove-hobby-button {
-    margin: 5px;
-    border-radius: 100px;
-    border: 1px solid rgba(0, 255, 240, 0.35); /* subtle neon outline */
-    background: rgba(4, 8, 20, 0.9); /* dark panel background */
-    color: #80fff0; /* soft neon cyan text */
+/* Animated moving neon grid */
+#App::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+        linear-gradient(rgba(0, 255, 240, 0.07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 0, 140, 0.07) 1px, transparent 1px);
+    background-size: 60px 60px;
+    animation: gridMove 25s linear infinite;
+    pointer-events: none;
+    z-index: 0;
 }
 
-.add-hobby-button {
-  display: inline-block;
-  margin-top: 10px;
-  padding: 10px 18px;
-  border-radius: 12px;
-  border: 1px solid rgba(0, 255, 240, 0.35); /* subtle neon outline */
-  background: rgba(4, 8, 20, 0.9); /* dark panel background */
-  color: #80fff0; /* soft neon cyan text */
-  font-weight: bold;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-  text-shadow: 0 0 3px rgba(128, 255, 240, 0.5);
+/* Subtle flashing cyber siren glow */
+#App::after {
+    content: "";
+    position: absolute;
+    inset: -20%;
+    background: radial-gradient(circle, rgba(255, 0, 140, 0.15), transparent 60%);
+    animation: sirenPulse 6s ease-in-out infinite alternate;
+    pointer-events: none;
+    z-index: 0;
 }
 
-.add-hobby-button:hover {
-  transform: translateY(-2px);
-  border-color: #00fff0;
-  box-shadow:
-    0 0 8px rgba(0, 255, 240, 0.7),
-    0 0 5px rgba(255, 0, 140, 0.4);
+/* Floating particles */
+@keyframes particleFloat {
+    0% { transform: translateY(0px); opacity: 0.3; }
+    50% { opacity: 0.6; }
+    100% { transform: translateY(-40px); opacity: 0.3; }
 }
 
-.add-hobby-button:active {
-  transform: translateY(0);
-  box-shadow:
-    0 0 4px rgba(0, 255, 240, 0.5),
-    0 0 3px rgba(255, 0, 140, 0.3);
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+        radial-gradient(rgba(0, 255, 240, 0.15) 2px, transparent 2px),
+        radial-gradient(rgba(255, 0, 140, 0.15) 2px, transparent 2px);
+    background-size: 120px 120px;
+    animation: particleFloat 12s ease-in-out infinite alternate;
+    pointer-events: none;
+    z-index: -1;
 }
 
+/* Grid Animation */
+@keyframes gridMove {
+    from { background-position: 0 0, 0 0; }
+    to { background-position: 0 600px, 600px 0; }
+}
 
+/* Smooth ambient neon breathing glow */
+#App::after {
+    content: "";
+    position: absolute;
+    width: 700px;
+    height: 700px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(255, 0, 140, 0.12), transparent 65%);
+    animation: ambientGlow 8s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 0;
+    mix-blend-mode: screen;
+}
+
+/* Smooth color shift instead of swapping gradients */
+@keyframes ambientGlow {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        filter: hue-rotate(0deg);
+        opacity: 0.18;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.05);
+        filter: hue-rotate(90deg);
+        opacity: 0.25;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        filter: hue-rotate(180deg);
+        opacity: 0.18;
+    }
+}
+
+/* ========================= */
+/* PANEL + COMPONENT STYLES */
+/* ========================= */
 
 .panel-shell {
+    position: relative;
+    z-index: 1;
     width: min(960px, 100%);
     padding: 28px;
     box-sizing: border-box;
@@ -68,6 +127,55 @@
         0 0 40px rgba(0, 255, 240, 0.08);
     backdrop-filter: blur(10px);
 }
+
+/* ========================= */
+/* BUTTONS */
+/* ========================= */
+
+.remove-hobby-button {
+    margin: 5px;
+    border-radius: 100px;
+    border: 1px solid rgba(0, 255, 240, 0.35);
+    background: rgba(4, 8, 20, 0.9);
+    color: #80fff0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.remove-hobby-button:hover {
+    box-shadow: 0 0 8px rgba(255, 0, 140, 0.6);
+}
+
+.add-hobby-button {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 10px 18px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 255, 240, 0.35);
+    background: rgba(4, 8, 20, 0.9);
+    color: #80fff0;
+    font-weight: bold;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    text-shadow: 0 0 3px rgba(128, 255, 240, 0.5);
+}
+
+.add-hobby-button:hover {
+    transform: translateY(-2px);
+    border-color: #00fff0;
+    box-shadow:
+        0 0 8px rgba(0, 255, 240, 0.7),
+        0 0 5px rgba(255, 0, 140, 0.4);
+}
+
+.add-hobby-button:active {
+    transform: translateY(0);
+}
+
+/* ========================= */
+/* TABS + SETTINGS */
+/* ========================= */
 
 .tab-row {
     display: flex;
@@ -99,10 +207,6 @@
     cursor: pointer;
 }
 
-.tab-toggle span {
-    display: inline-block;
-}
-
 .settings-window {
     height: min(60vh, 420px);
     overflow-y: auto;
@@ -118,21 +222,7 @@
 }
 
 .settings-window input {
-    margin-bottom: 15px;
-}
-
-.settings-window::-webkit-scrollbar {
-    width: 10px;
-}
-
-.settings-window::-webkit-scrollbar-track {
-    background: rgba(4, 8, 18, 0.9);
-    border-radius: 999px;
-}
-
-.settings-window::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #00f7ff, #ff007c);
-    border-radius: 999px;
+    margin-bottom: 12px;
 }
 
 .settings-field {
@@ -169,6 +259,10 @@
     color: rgba(184, 248, 255, 0.45);
 }
 
+/* ========================= */
+/* MOBILE */
+/* ========================= */
+
 @media (max-width: 640px) {
     #App {
         padding: 24px 14px;
@@ -177,15 +271,6 @@
     .panel-shell {
         padding: 18px;
         border-radius: 14px;
-    }
-
-    .tab-row {
-        gap: 12px;
-    }
-
-    .tab-toggle {
-        width: 100%;
-        justify-content: flex-start;
     }
 
     .settings-window {
