@@ -2,6 +2,7 @@ package main
 
 import (
 	"embed"
+	"fmt"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -12,6 +13,18 @@ import (
 var assets embed.FS
 
 func main() {
+
+	res, error := CalculateStateTax(30000, "california", "single")
+
+	if error != nil {
+		fmt.Println("error caught", error)
+		return
+	}
+
+	res2 := fmt.Sprintf("asldkjfalskdfjklasdjfkljasdklf%.2f", res)
+
+	fmt.Println(res2)
+
 	// Create an instance of the app structure
 	app := NewApp()
 
