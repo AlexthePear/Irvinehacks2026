@@ -14,16 +14,15 @@ var assets embed.FS
 
 func main() {
 
-	res, error := CalculateStateTax(30000, "california", "single")
-
+	res, error := StateTaxOwed(30000, "california", "single")
+	res_fed, _ := FederalTaxOwed(30000, "single")
 	if error != nil {
 		fmt.Println("error caught", error)
 		return
 	}
 
-	res2 := fmt.Sprintf("asldkjfalskdfjklasdjfkljasdklf%.2f", res)
-
-	fmt.Println(res2)
+	fmt.Println(res)
+	fmt.Println(res_fed)
 
 	// Create an instance of the app structure
 	app := NewApp()
