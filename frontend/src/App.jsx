@@ -1,28 +1,42 @@
-import {useState} from 'react';
-import logo from './assets/images/logo-universal.png';
+import { useState } from 'react';
 import './App.css';
-import {Greet} from "../wailsjs/go/main/App";
+
+const tabs = [
+    { id: 'comp', label: 'Compensation' }
+];
 
 function App() {
-    const [resultText, setResultText] = useState("Please enter your name below 👇");
-    const [name, setName] = useState('');
-    const updateName = (e) => setName(e.target.value);
-    const updateResultText = (result) => setResultText(result);
-
-    function greet() {
-        Greet(name).then(updateResultText);
-    }
+    const [activeTab, setActiveTab] = useState(tabs[0].id);
 
     return (
         <div id="App">
-            <img src={logo} id="logo" alt="logo"/>
-            <div id="result" className="result">{resultText}</div>
-            <div id="input" className="input-box">
-                <input id="name" className="input" onChange={updateName} autoComplete="off" name="input" type="text"/>
-                <button className="btn" onClick={greet}>Greet</button>
+            <div className="panel-shell">
+                <div className="tab-row">
+                    {tabs.map((tab) => (
+                        <label className="tab-toggle" key={tab.id}>
+                            <input
+                                type="checkbox"
+                                checked={activeTab === tab.id}
+                                onChange={() => setActiveTab(tab.id)}
+                            />
+                            <span>{tab.label}</span>
+                        </label>
+                    ))}
+                </div>
+
+                <div className="settings-window">
+                    <div className="settings-field">
+                        <label htmlFor={`${activeTab}-setting`}>{activeTab}</label>
+                        <input
+                            id={`${activeTab}-setting`}
+                            type="text"
+                            placeholder="Enter value"
+                        />
+                    </div>
+                </div>
             </div>
         </div>
-    )
+    );
 }
 
-export default App
+export default App;

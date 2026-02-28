@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"encoding/json"
+	"os"
 )
 
 // App struct
@@ -23,5 +25,19 @@ func (a *App) startup(ctx context.Context) {
 
 // Greet returns a greeting for the given name
 func (a *App) Greet(name string) string {
+	data := struct {
+		Name string `json:"name"`
+	}{
+		Name: name,
+	}
+
+	// Create file (overwrites if exists)
+	file, _ := os.Create("output.json")
+	defer file.Close()
+
+	// Encode struct to JSON and write to file
+	encoder := json.NewEncoder(file)
+	encoder.Encode(data)
+
 	return fmt.Sprintf("Hello %s, It's show time!", name)
 }
