@@ -58,8 +58,61 @@
 }
 
 #App::before {
-    display: none;
+    content: "";
+    position: absolute;
+    inset: -6%;
+    background-image:
+        linear-gradient(rgba(68, 244, 255, 0.085) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 47, 146, 0.085) 1px, transparent 1px),
+        linear-gradient(rgba(68, 244, 255, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 47, 146, 0.06) 1px, transparent 1px),
+        linear-gradient(rgba(68, 244, 255, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 47, 146, 0.045) 1px, transparent 1px),
+        linear-gradient(rgba(68, 244, 255, 0.033) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 47, 146, 0.033) 1px, transparent 1px),
+        linear-gradient(rgba(68, 244, 255, 0.022) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 47, 146, 0.022) 1px, transparent 1px),
+        linear-gradient(rgba(68, 244, 255, 0.016) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 47, 146, 0.016) 1px, transparent 1px);
+    background-size:
+        54px 54px, 54px 54px,
+        82px 82px, 82px 82px,
+        118px 118px, 118px 118px,
+        162px 162px, 162px 162px,
+        214px 214px, 214px 214px,
+        288px 288px, 288px 288px;
+    background-position:
+        0 0, 0 0,
+        17px 11px, 17px 11px,
+        -26px 31px, -26px 31px,
+        46px -18px, 46px -18px,
+        -42px -24px, -42px -24px,
+        74px 28px, 74px 28px;
+    opacity: 0.86;
+    mix-blend-mode: screen;
+    pointer-events: none;
+    z-index: 0;
+    animation:
+        gridDrift 28s linear infinite,
+        gridFlicker 0.35s steps(2) infinite,
+        gridPulse 3.8s ease-in-out infinite;
+    mask-image:
+        repeating-linear-gradient(
+            120deg,
+            rgba(255, 255, 255, 0.85) 0,
+            rgba(255, 255, 255, 0.85) 2px,
+            rgba(255, 255, 255, 0.4) 2px,
+            rgba(255, 255, 255, 0.4) 6px,
+            rgba(255, 255, 255, 0.2) 6px,
+            rgba(255, 255, 255, 0.2) 10px
+        );
+    mask-size: 140px 140px;
+    mask-position: 0 0;
 }
+
+/* #App::before {
+    display: none;
+} */
 
 #App::after {
     display: none;
@@ -118,6 +171,24 @@ body::after {
             46px 628px, 674px -18px,
             -42px 468px, 586px -24px,
             74px 904px, 914px 28px;
+    }
+}
+
+@keyframes gridFlicker {
+    0% { opacity: 0.78; filter: brightness(1); }
+    20% { opacity: 0.9; filter: brightness(1.15); }
+    40% { opacity: 0.7; filter: brightness(0.9); }
+    60% { opacity: 0.88; filter: brightness(1.1); }
+    80% { opacity: 0.8; filter: brightness(0.95); }
+    100% { opacity: 0.84; filter: brightness(1.05); }
+}
+
+@keyframes gridPulse {
+    0%, 100% {
+        mask-position: 0 0;
+    }
+    50% {
+        mask-position: 60px -40px;
     }
 }
 
@@ -372,12 +443,12 @@ body::after {
         linear-gradient(90deg, rgba(68, 244, 255, 0.9), rgba(68, 244, 255, 0.9)) 160px 0 / 28px 2px no-repeat,
         linear-gradient(180deg, rgba(68, 244, 255, 0.86), rgba(68, 244, 255, 0.86)) 0 42px / 2px 88px no-repeat,
         linear-gradient(180deg, rgba(68, 244, 255, 0.86), rgba(68, 244, 255, 0.86)) 0 144px / 2px 30px no-repeat,
-        linear-gradient(90deg, rgba(255, 47, 146, 0.88), rgba(255, 47, 146, 0.88)) calc(100% - 182px) 10px / 72px 2px no-repeat,
-        linear-gradient(90deg, rgba(255, 47, 146, 0.88), rgba(255, 47, 146, 0.88)) calc(100% - 100px) 10px / 26px 2px no-repeat,
+        linear-gradient(90deg, rgba(255, 47, 146, 0.88), rgba(255, 47, 146, 0.88)) calc(100% - 222px) 10px / 112px 2px no-repeat,
+        linear-gradient(90deg, rgba(255, 47, 146, 0.88), rgba(255, 47, 146, 0.88)) calc(100% - 94px) 10px / 36px 2px no-repeat,
         linear-gradient(180deg, rgba(255, 47, 146, 0.84), rgba(255, 47, 146, 0.84)) calc(100% - 2px) 48px / 2px 74px no-repeat,
         linear-gradient(180deg, rgba(255, 47, 146, 0.84), rgba(255, 47, 146, 0.84)) calc(100% - 2px) 136px / 2px 24px no-repeat,
-        linear-gradient(90deg, rgba(255, 47, 146, 0.8), rgba(255, 47, 146, 0.8)) 34px calc(100% - 2px) / 78px 2px no-repeat,
-        linear-gradient(90deg, rgba(255, 47, 146, 0.8), rgba(255, 47, 146, 0.8)) 124px calc(100% - 2px) / 24px 2px no-repeat,
+        linear-gradient(90deg, rgba(255, 47, 146, 0.8), rgba(255, 47, 146, 0.8)) 34px calc(100% - 2px) / 118px 2px no-repeat,
+        linear-gradient(90deg, rgba(255, 47, 146, 0.8), rgba(255, 47, 146, 0.8)) 162px calc(100% - 2px) / 32px 2px no-repeat,
         linear-gradient(90deg, rgba(68, 244, 255, 0.84), rgba(68, 244, 255, 0.84)) calc(100% - 152px) calc(100% - 2px) / 54px 2px no-repeat,
         linear-gradient(90deg, rgba(68, 244, 255, 0.84), rgba(68, 244, 255, 0.84)) calc(100% - 88px) calc(100% - 2px) / 22px 2px no-repeat,
         linear-gradient(135deg, transparent 42%, rgba(68, 244, 255, 0.4) 47%, rgba(68, 244, 255, 0.4) 53%, transparent 58%) 10px 10px / 22px 22px no-repeat,
