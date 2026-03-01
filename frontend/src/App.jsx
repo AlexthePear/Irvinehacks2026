@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import LiveDisplay from "./components/LiveDisplay/LiveDisplay";
 import {
   WriteToJson,
+  ReadFromJson,
   CalcFederalTax,
   CalcStateTax,
   CalcFicaTax,
@@ -100,6 +101,45 @@ const formatInsightText = (text) =>
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 
+const normalizeLoadedState = (loaded) => {
+  if (!loaded || typeof loaded !== "object") {
+    return initialState;
+  }
+
+  const comp = loaded.comp || {};
+  const savings = loaded.savings || {};
+  const expenses = loaded.expenses || {};
+  const wants = loaded.wants || {};
+  const career = loaded.career || {};
+
+  return {
+    comp: {
+      ...initialState.comp,
+      ...comp,
+      "Include RSU in Gross Income": Boolean(comp["Include RSU in Gross Income"])
+    },
+    savings: {
+      ...initialState.savings,
+      ...savings,
+      CustomAccounts: Array.isArray(savings.CustomAccounts) ? savings.CustomAccounts : []
+    },
+    expenses: {
+      ...initialState.expenses,
+      ...expenses,
+      Subscriptions: Array.isArray(expenses.Subscriptions) ? expenses.Subscriptions : []
+    },
+    wants: {
+      ...initialState.wants,
+      ...wants,
+      Hobbies: Array.isArray(wants.Hobbies) ? wants.Hobbies : []
+    },
+    career: {
+      ...initialState.career,
+      ...career
+    }
+  };
+};
+
 function App() {
   const [activeTab, setActiveTab] = useState(tabs[0].id);
   const [values, setValues] = useState(initialState);
@@ -127,6 +167,30 @@ function App() {
       console.error("Failed to write JSON", err);
     }
   };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const hydrateFromJson = async () => {
+      try {
+        const loaded = await ReadFromJson();
+        if (!isMounted || !loaded || Object.keys(loaded).length === 0) {
+          return;
+        }
+        const normalized = normalizeLoadedState(loaded);
+        setValues(normalized);
+        setDraftValues(normalized);
+      } catch (err) {
+        console.error("Failed to load output.json", err);
+      }
+    };
+
+    hydrateFromJson();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const runAiInsights = async (promptOverride) => {
     const nextPrompt = (promptOverride ?? aiPrompt).trim() || defaultInsightPrompt;

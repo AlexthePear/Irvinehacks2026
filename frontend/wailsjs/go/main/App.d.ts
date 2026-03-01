@@ -11,4 +11,6 @@ export function GenerateInsights(arg1:string):Promise<string>;
 
 export function Greet(arg1:string):Promise<string>;
 
+export function ReadFromJson():Promise<Record<string, any>>;
+
 export function WriteToJson(arg1:Record<string, Record<string, any>>):Promise<void>;
