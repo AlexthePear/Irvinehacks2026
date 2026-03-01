@@ -32,7 +32,7 @@ func (a *App) Greet(name string) string {
 	}
 
 	// Create file (overwrites if exists)
-	file, _ := os.Create("output.json")
+	file, _ := os.Create("/Users/ryan/Irvinehacks2026/output.json")
 	defer file.Close()
 
 	// Encode struct to JSON and write to file
@@ -44,7 +44,7 @@ func (a *App) Greet(name string) string {
 
 // WriteToJson writes the provided committed user values to output.json.
 func (a *App) WriteToJson(values map[string]map[string]interface{}) error {
-	file, err := os.Create("output.json")
+	file, err := os.Create("/Users/ryan/Irvinehacks2026/output.json")
 	if err != nil {
 		return err
 	}
@@ -59,7 +59,7 @@ func (a *App) WriteToJson(values map[string]map[string]interface{}) error {
 // ReadFromJson loads saved planner values from output.json.
 // If the file does not exist, it returns an empty object.
 func (a *App) ReadFromJson() (map[string]interface{}, error) {
-	file, err := os.Open("output.json")
+	file, err := os.Open("/Users/ryan/Irvinehacks2026/output.json")
 	if err != nil {
 		if os.IsNotExist(err) {
 			return map[string]interface{}{}, nil
@@ -119,5 +119,5 @@ func (a *App) CalcFicaTax(income float64) float64 {
 
 // GenerateInsights reads output.json, sends it to Gemini with the provided prompt, and returns the model response.
 func (a *App) GenerateInsights(prompt string) (string, error) {
-	return generate_insights("output.json", prompt)
+	return generate_insights("/Users/ryan/Irvinehacks2026/output.json", prompt)
 }

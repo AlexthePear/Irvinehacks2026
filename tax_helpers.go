@@ -37,6 +37,8 @@ var (
 	loadErr         error
 )
 
+const projectRoot = "/Users/ryan/Irvinehacks2026"
+
 // AGICalc computes Adjusted Gross Income for single or married joint filers.
 // Gross income minus deductible contributions, floored at zero.
 func AGICalc(grossIncome, contrib401k, iraContrib, hsaContrib float64) float64 {
@@ -81,7 +83,7 @@ func FICATaxOwed(grossIncome, hsaContrib float64, filingStatus string) (float64,
 // Only supports single and married joint filers.
 func FederalTaxOwed(agi float64, filingStatus string) (float64, error) {
 	loadFederalOnce.Do(func() {
-		federalTaxTables, loadErr = loadFederalBrackets("federal_tax_brackets.csv")
+		federalTaxTables, loadErr = loadFederalBrackets(projectRoot + "/federal_tax_brackets.csv")
 	})
 	if loadErr != nil {
 		return 0, loadErr
@@ -111,7 +113,7 @@ func FederalTaxOwed(agi float64, filingStatus string) (float64, error) {
 // Only supports single and married joint filers.
 func StateTaxOwed(agi float64, state string, filingStatus string) (float64, error) {
 	loadStateOnce.Do(func() {
-		stateTaxTables, loadErr = loadStateBrackets("state_tax_brackets.csv")
+		stateTaxTables, loadErr = loadStateBrackets(projectRoot + "/state_tax_brackets.csv")
 	})
 	if loadErr != nil {
 		return 0, loadErr

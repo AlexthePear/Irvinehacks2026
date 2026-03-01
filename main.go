@@ -2,7 +2,6 @@ package main
 
 import (
 	"embed"
-	"fmt"
 
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
@@ -22,25 +21,8 @@ func main() {
 	// println(res_ai)
 	
 
-	res, error := StateTaxOwed(30000, "california", "single")
-	res_fed, _ := FederalTaxOwed(30000, "single")
-	if error != nil {
-		fmt.Println("error caught", error)
-		return
-	}
-
-	fmt.Println(res)
-	fmt.Println(res_fed)
-
 	// Create an instance of the app structure
 	app := NewApp()
-
-	fmt.Println("About to start Wails...")
-	errRun := wails.Run(&options.App{ /* ... */ })
-	fmt.Println("Wails.Run returned")
-	if errRun != nil {
-		fmt.Println("Error:", errRun)
-	}
 
 	// Create application with options
 	err := wails.Run(&options.App{

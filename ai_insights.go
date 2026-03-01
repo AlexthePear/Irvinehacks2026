@@ -14,7 +14,7 @@ const geminiEndpoint = "https://generativelanguage.googleapis.com/v1beta/models/
 
 // generate_insights reads the JSON file, combines it with the prompt, and returns Gemini's response text.
 func generate_insights(outputFilePath string, prompt string) (string, error) {
-	if err := loadDotEnv(".env"); err != nil {
+	if err := loadDotEnv("/Users/ryan/Irvinehacks2026/.env"); err != nil {
 		return "", err
 	}
 
