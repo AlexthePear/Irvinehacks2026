@@ -1,53 +1,45 @@
 {
   "comp": {
-    "Base Pay": "143499.96",
-    "Bonus": "14349.96",
+    "Base Pay": "11958.33",
+    "Bonus": "1195.83",
     "Filing Status": "Single",
     "Location (State)": "california",
     "Misc": "0",
-    "RSU": "50000.04"
+    "RSU": "4166.67"
   },
   "expenses": {
     "Debt Payments": "0",
-    "Groceries": "4800",
-    "Healthcare": "600",
-    "Housing": "36000",
-    "Insurances": "1200",
-    "Transportation": "2400",
-    "Utilities": "2400"
+    "Groceries": "400",
+    "Healthcare": "10",
+    "Housing": "3000",
+    "Insurances": "100",
+    "Transportation": "100",
+    "Utilities": "50"
   },
   "savings": {
-    "401k": "24500.04",
-    "529": "9999.96",
+    "401k": "2041.67",
+    "529": "833.33",
     "Back Door": "0",
     "CustomAccounts": [
       {
-        "amount": "19200",
-        "name": "Brokerage"
+        "amount": "2700",
+        "name": "brokerage"
       }
     ],
-    "HSA": "3200.04",
+    "HSA": "266.67",
     "IRA": "0",
     "Roth 401k": "0",
-    "Roth IRA": "7500"
+    "Roth IRA": "625"
   },
   "wants": {
-    "Dining": "12000",
-    "Entertainment": "6000",
+    "Dining": "1000",
+    "Entertainment": "500",
     "Hobbies": [
       {
-        "amount": "2400",
-        "name": "Geekbar"
-      },
-      {
-        "amount": "7200",
+        "amount": "600",
         "name": "Snowboarding"
-      },
-      {
-        "amount": "3600",
-        "name": "Onlyfans Addiction"
       }
     ],
-    "Travel": "6000"
+    "Travel": "500"
   }
 }

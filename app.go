@@ -58,12 +58,12 @@ func (a *App) WriteToJson(values map[string]map[string]interface{}) error {
 
 // CalcFederalTax exposes the federal tax calculation to the frontend.
 func (a *App) CalcFederalTax(taxableIncome float64, filingStatus string) (float64, error) {
-	return CalculateFederalTax(taxableIncome, filingStatus)
+	return FederalTaxOwed(taxableIncome, filingStatus)
 }
 
 // CalcStateTax exposes the state tax calculation to the frontend.
 func (a *App) CalcStateTax(taxableIncome float64, state string, filingStatus string) (float64, error) {
-	return CalculateStateTax(taxableIncome, state, filingStatus)
+	return StateTaxOwed(taxableIncome, state, filingStatus)
 }
 
 // CalcFicaTax calculates FICA taxes (Social Security + Medicare) with current caps.
