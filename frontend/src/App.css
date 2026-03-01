@@ -191,6 +191,85 @@ body::before {
     width: 100%;
 }
 
+.page-row {
+    width: min(1100px, 100%);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 22px;
+    z-index: 1;
+}
+
+.page-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 18px;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 255, 240, 0.3);
+    background: rgba(8, 14, 26, 0.85);
+    color: #b8f8ff;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.page-toggle:hover {
+    transform: translateY(-1px);
+    border-color: rgba(0, 255, 240, 0.55);
+    box-shadow: 0 0 12px rgba(0, 255, 240, 0.18);
+}
+
+.page-toggle.is-active {
+    border-color: rgba(255, 0, 140, 0.55);
+    color: #ffe0f0;
+    box-shadow:
+        0 0 0 1px rgba(255, 0, 140, 0.2) inset,
+        0 0 16px rgba(255, 0, 140, 0.25);
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 16px;
+}
+
+.page-kicker {
+    margin: 0;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    color: rgba(157, 253, 255, 0.75);
+}
+
+.page-title {
+    margin: 6px 0 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: #eefcff;
+}
+
+.page-badge {
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 255, 240, 0.3);
+    background: rgba(5, 12, 22, 0.9);
+    color: #9dfdff;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.page-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
 .tab-toggle {
     display: inline-flex;
     align-items: center;
@@ -666,6 +745,19 @@ body::before {
 @media (max-width: 640px) {
     #App {
         padding: 24px 14px;
+    }
+
+    .page-row {
+        grid-template-columns: 1fr;
+    }
+
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .page-grid {
+        grid-template-columns: 1fr;
     }
 
     .panel-shell {
