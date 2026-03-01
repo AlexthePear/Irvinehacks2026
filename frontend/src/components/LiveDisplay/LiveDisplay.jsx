@@ -1,63 +1,127 @@
 import { useState } from "react";
 import "./LiveDisplay.css";
 
-function LiveDisplay({ totalIncome, remainingIncome }) {
-  const [isMonthly, setIsMonthly] = useState(false);
+const fmt = (value) =>
+  (value || 0).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
 
-  const displayIncome = isMonthly
-    ? totalIncome / 12
-    : totalIncome;
-
-  const displayRemaining = isMonthly
-    ? remainingIncome / 12
-    : remainingIncome;
-
-  const incomeLabel = isMonthly ? "Monthly Income" : "Annual Income";
-  const remainingLabel = isMonthly ? "Monthly Remaining" : "Annual Remaining";
+function LiveDisplay({
+  isMonthly,
+  onTogglePeriod,
+  grossIncome,
+  adjustedGrossIncome,
+  deductionsSaved,
+  investmentsTotal,
+  pretaxTotal,
+  afterTaxAdvantaged,
+  afterTaxCustom,
+  takeHomePay,
+  taxDetails
+}) {
+  const [showMore, setShowMore] = useState(false);
+  const [showInvestMore, setShowInvestMore] = useState(false);
 
   return (
-    <div className="live-salary-container">
-      <div className="salary-boxes">
-        <div className="salary-box">
-          <h4>{remainingLabel}</h4>
-          <p>
-            $
-            {displayRemaining.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2
-            })}
-          </p>
-        </div>
-
-        <div className="salary-box">
-          <h4>{incomeLabel}</h4>
-          <p>
-            $
-            {displayIncome.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2
-            })}
-          </p>
-        </div>
-      </div>
-
-      <div className="toggle-switch">
-        <span style={{ fontWeight: !isMonthly ? "bold" : "normal" }}>
+    <div className="live-display">
+      <div className="period-toggle">
+        <span className={!isMonthly ? "period-label active" : "period-label"}>
           Annual
         </span>
-
         <label className="switch">
           <input
             type="checkbox"
             checked={isMonthly}
-            onChange={() => setIsMonthly(!isMonthly)}
+            onChange={onTogglePeriod}
           />
           <span className="slider"></span>
         </label>
-
-        <span style={{ fontWeight: isMonthly ? "bold" : "normal" }}>
+        <span className={isMonthly ? "period-label active" : "period-label"}>
           Monthly
         </span>
+      </div>
+      <div className="metrics-grid">
+        <div className="metric-card">
+          <p className="metric-label">Gross Income</p>
+          <p className="metric-value">${fmt(grossIncome)}</p>
+        </div>
+
+        <div className="metric-card">
+          <p className="metric-label">Adjusted Gross Income</p>
+          <p className="metric-value">${fmt(adjustedGrossIncome)}</p>
+          <p className="metric-sub positive">
+            Saved ${fmt(deductionsSaved)} in deductions
+          </p>
+        </div>
+
+        <div className="metric-card">
+          <p className="metric-label">Investments</p>
+          <p className="metric-value">${fmt(investmentsTotal)}</p>
+          <p className="metric-sub positive">
+            Pretax savings: ${fmt(pretaxTotal)}
+          </p>
+          <p className="metric-sub positive">
+            Tax-advantaged after-tax: ${fmt(afterTaxAdvantaged)}
+          </p>
+          <p className="metric-sub positive">
+            After-tax custom savings: ${fmt(afterTaxCustom)}
+          </p>
+          <button
+            type="button"
+            className="show-more-button"
+            onClick={() => setShowInvestMore((prev) => !prev)}
+          >
+            {showInvestMore ? "Hide breakdown" : "Show more"}
+          </button>
+          {showInvestMore && (
+            <div className="tax-breakdown">
+              <div className="tax-row">
+                <span>Pretax (401k/HSA/IRA)</span>
+                <span>${fmt(pretaxTotal)}</span>
+              </div>
+              <div className="tax-row">
+                <span>After-tax advantaged (Roth/529)</span>
+                <span>${fmt(afterTaxAdvantaged)}</span>
+              </div>
+              <div className="tax-row">
+                <span>After-tax custom</span>
+                <span>${fmt(afterTaxCustom)}</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="metric-card">
+          <p className="metric-label">Take Home Pay</p>
+          <p className="metric-value">${fmt(takeHomePay)}</p>
+          <p className="metric-sub negative">
+            Paid ${fmt(taxDetails?.total || 0)} in taxes
+          </p>
+          <button
+            type="button"
+            className="show-more-button"
+            onClick={() => setShowMore((prev) => !prev)}
+          >
+            {showMore ? "Hide breakdown" : "Show more"}
+          </button>
+          {showMore && (
+            <div className="tax-breakdown">
+              <div className="tax-row">
+                <span>Federal</span>
+                <span>${fmt(taxDetails?.federal || 0)}</span>
+              </div>
+              <div className="tax-row">
+                <span>State</span>
+                <span>${fmt(taxDetails?.state || 0)}</span>
+              </div>
+              <div className="tax-row">
+                <span>FICA</span>
+                <span>${fmt(taxDetails?.fica || 0)}</span>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"encoding/json"
+	"fmt"
 	"os"
 )
 
@@ -40,4 +40,55 @@ func (a *App) Greet(name string) string {
 	encoder.Encode(data)
 
 	return fmt.Sprintf("Hello %s, It's show time!", name)
+}
+
+// WriteToJson writes the provided committed user values to output.json.
+func (a *App) WriteToJson(values map[string]map[string]interface{}) error {
+	file, err := os.Create("output.json")
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	encoder := json.NewEncoder(file)
+	encoder.SetIndent("", "  ")
+
+	return encoder.Encode(values)
+}
+
+// CalcFederalTax exposes the federal tax calculation to the frontend.
+func (a *App) CalcFederalTax(taxableIncome float64, filingStatus string) (float64, error) {
+	return CalculateFederalTax(taxableIncome, filingStatus)
+}
+
+// CalcStateTax exposes the state tax calculation to the frontend.
+func (a *App) CalcStateTax(taxableIncome float64, state string, filingStatus string) (float64, error) {
+	return CalculateStateTax(taxableIncome, state, filingStatus)
+}
+
+// CalcFicaTax calculates FICA taxes (Social Security + Medicare) with current caps.
+func (a *App) CalcFicaTax(income float64) float64 {
+	if income <= 0 {
+		return 0
+	}
+
+	const ssRate = 0.062
+	const ssWageBase = 168600.0 // approximate 2024 cap; adjust as needed
+	const medicareRate = 0.0145
+	const addlMedicareRate = 0.009
+	const addlThreshold = 200000.0
+
+	ssTaxable := income
+	if ssTaxable > ssWageBase {
+		ssTaxable = ssWageBase
+	}
+
+	socialSecurity := ssTaxable * ssRate
+	medicare := income * medicareRate
+
+	if income > addlThreshold {
+		medicare += (income - addlThreshold) * addlMedicareRate
+	}
+
+	return socialSecurity + medicare
 }

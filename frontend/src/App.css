@@ -2,6 +2,11 @@
 /* CYBERPUNK ANIMATED BACKGROUND */
 /* ========================= */
 
+:root {
+    --form-border-color: rgba(0, 255, 240, 0.28);
+    --form-focus-border-color: rgba(255, 0, 140, 0.65);
+}
+
 #App {
     position: relative;
     display: flex;
@@ -199,6 +204,33 @@ body::before {
     cursor: pointer;
 }
 
+.save-json-button {
+    margin-left: auto;
+    padding: 10px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--form-border-color);
+    background: linear-gradient(135deg, rgba(7, 16, 32, 0.9), rgba(9, 10, 24, 0.95));
+    color: #9dfdff;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 0 12px rgba(0, 255, 240, 0.12);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.save-json-button:hover {
+    transform: translateY(-1px);
+    border-color: var(--form-focus-border-color);
+    box-shadow:
+        0 0 10px rgba(0, 255, 240, 0.45),
+        0 0 16px rgba(255, 0, 140, 0.2);
+}
+
+.save-json-button:active {
+    transform: translateY(0);
+}
+
 .tab-toggle input {
     width: 18px;
     height: 18px;
@@ -243,7 +275,7 @@ body::before {
     width: 100%;
     padding: 12px 14px;
     box-sizing: border-box;
-    border: 1px solid rgba(0, 255, 240, 0.28);
+    border: 1px solid var(--form-border-color);
     border-radius: 10px;
     background: rgba(4, 10, 22, 0.9);
     color: #eefcff;
@@ -251,12 +283,85 @@ body::before {
 }
 
 .settings-field input:focus {
-    border-color: rgba(255, 0, 140, 0.65);
+    border-color: var(--form-focus-border-color);
     box-shadow: 0 0 0 3px rgba(255, 0, 140, 0.14);
 }
 
 .settings-field input::placeholder {
     color: rgba(184, 248, 255, 0.45);
+}
+
+.settings-field select {
+    width: 100%;
+    padding: 12px 14px;
+    box-sizing: border-box;
+    border: 1px solid var(--form-border-color);
+    border-radius: 10px;
+    background: rgba(4, 10, 22, 0.9);
+    color: #eefcff;
+    outline: none;
+    margin-bottom: 12px;
+    cursor: pointer;
+    /* box-sizing: border-box; */
+    /* border: 1px solid var(--form-border-color); */
+    /* border-radius: 10px;
+    background-image:
+        url("data:image/svg+xml,%3Csvg width='12' height='7' viewBox='0 0 12 7' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 6L11 1' stroke='%23E8FFFF' stroke-width='1.5'/%3E%3C/svg%3E"),
+        linear-gradient(180deg, rgba(4, 10, 22, 0.94), rgba(6, 13, 30, 0.96)),
+        radial-gradient(circle at top left, rgba(0, 255, 240, 0.15), transparent 60%);
+    background-position: right 14px center, center, center;
+    background-repeat: no-repeat;
+    background-size: 12px 7px, cover, cover;
+    color: #eefcff;
+    
+    appearance: none;
+    box-shadow: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease; */
+}
+
+.settings-field select:focus {
+    border-color: var(--form-focus-border-color);
+    box-shadow:
+        0 0 0 3px rgba(255, 0, 140, 0.14);
+    outline: none;
+}
+
+.settings-field select option {
+    background: #050814;
+    color: #eefcff;
+}
+
+.settings-window::-webkit-scrollbar {
+    width: 6px;
+}
+
+.settings-window::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.settings-window::-webkit-scrollbar-thumb {
+    background: rgba(255, 0, 140, 0.4);
+    border-radius: 999px;
+    border: 1px solid rgba(7, 16, 32, 0.9);
+}
+
+.settings-window::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 0, 140, 0.65);
+}
+
+.settings-window::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+.settings-window::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+.settings-window {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 0, 140, 0.45) transparent;
 }
 
 /* ========================= */
