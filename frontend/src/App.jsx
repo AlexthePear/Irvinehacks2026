@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import LiveDisplay from "./components/LiveDisplay/LiveDisplay";
 import {
   WriteToJson,
+  ReadFromJson,
   CalcFederalTax,
   CalcStateTax,
   CalcFicaTax,
@@ -39,7 +40,8 @@ const tabFields = {
     "Debt Payments",
     "Insurances"
   ],
-  wants: ["Dining", "Entertainment", "Travel", { label: "Hobbies", dynamic: true }],
+  wants: ["Dining", "Entertainment", "Travel", { label: "Hobbies", dynamic: true }, 
+    { label: "Subscriptions", dynamicExpenses: true }],
   career: ["Job Title", "Company", "Level", "Years of Experience"]
 };
 
@@ -48,6 +50,7 @@ const initialState = {
     "Base Pay": "",
     Bonus: "",
     RSU: "",
+    "Include RSU in Gross Income": false,
     "Location (State)": "",
     "Filing Status": "",
     Misc: ""
@@ -69,7 +72,8 @@ const initialState = {
     Transportation: "",
     Healthcare: "",
     "Debt Payments": "",
-    Insurances: ""
+    Insurances: "",
+    Subscriptions: []
   },
   wants: {
     Dining: "",
@@ -96,6 +100,45 @@ const formatInsightText = (text) =>
     .replace(/\r\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
+
+const normalizeLoadedState = (loaded) => {
+  if (!loaded || typeof loaded !== "object") {
+    return initialState;
+  }
+
+  const comp = loaded.comp || {};
+  const savings = loaded.savings || {};
+  const expenses = loaded.expenses || {};
+  const wants = loaded.wants || {};
+  const career = loaded.career || {};
+
+  return {
+    comp: {
+      ...initialState.comp,
+      ...comp,
+      "Include RSU in Gross Income": Boolean(comp["Include RSU in Gross Income"])
+    },
+    savings: {
+      ...initialState.savings,
+      ...savings,
+      CustomAccounts: Array.isArray(savings.CustomAccounts) ? savings.CustomAccounts : []
+    },
+    expenses: {
+      ...initialState.expenses,
+      ...expenses,
+      Subscriptions: Array.isArray(expenses.Subscriptions) ? expenses.Subscriptions : []
+    },
+    wants: {
+      ...initialState.wants,
+      ...wants,
+      Hobbies: Array.isArray(wants.Hobbies) ? wants.Hobbies : []
+    },
+    career: {
+      ...initialState.career,
+      ...career
+    }
+  };
+};
 
 const escapeHtml = (value) =>
   value
@@ -206,6 +249,10 @@ function App() {
   const [aiError, setAiError] = useState("");
   const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
 
+  const toNumber = (val) => Number(val || 0);
+  const annualMultiplier = isMonthly ? 12 : 1;
+  const displayDivisor = isMonthly ? 12 : 1;
+
   const persistValues = async (payload) => {
     try {
       await WriteToJson(payload);
@@ -213,6 +260,30 @@ function App() {
       console.error("Failed to write JSON", err);
     }
   };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const hydrateFromJson = async () => {
+      try {
+        const loaded = await ReadFromJson();
+        if (!isMounted || !loaded || Object.keys(loaded).length === 0) {
+          return;
+        }
+        const normalized = normalizeLoadedState(loaded);
+        setValues(normalized);
+        setDraftValues(normalized);
+      } catch (err) {
+        console.error("Failed to load output.json", err);
+      }
+    };
+
+    hydrateFromJson();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const runAiInsights = async (promptOverride) => {
     const nextPrompt = (promptOverride ?? aiPrompt).trim() || defaultInsightPrompt;
@@ -251,49 +322,93 @@ function App() {
 
   const commitField = (tab, field) => {
     setValues((prev) => {
-      const updated = {
+      const next = {
         ...prev,
         [tab]: {
           ...prev[tab],
           [field]: draftValues[tab][field]
         }
       };
-      persistValues(updated);
-      return updated;
+      persistValues(next);
+      return next;
     });
   };
 
-  const commitHobby = (index) => {
+  const commitIncludeRSU = (checked) => {
+    setDraftValues((prev) => ({
+      ...prev,
+      comp: { ...prev.comp, "Include RSU in Gross Income": checked }
+    }));
     setValues((prev) => {
-      const updated = [...prev.wants.Hobbies];
-      updated[index] = draftValues.wants.Hobbies[index];
       const next = {
         ...prev,
-        wants: { ...prev.wants, Hobbies: updated }
+        comp: { ...prev.comp, "Include RSU in Gross Income": checked }
       };
       persistValues(next);
       return next;
     });
   };
 
-  const commitCustomAccount = (index) => {
+  const commitDynamicItem = (tab, key, index) => {
     setValues((prev) => {
-      const updated = [...prev.savings.CustomAccounts];
-      updated[index] = draftValues.savings.CustomAccounts[index];
+      const updated = [...prev[tab][key]];
+      updated[index] = draftValues[tab][key][index];
       const next = {
         ...prev,
-        savings: { ...prev.savings, CustomAccounts: updated }
+        [tab]: { ...prev[tab], [key]: updated }
       };
       persistValues(next);
       return next;
     });
   };
 
-  const toNumber = (val) => Number(val || 0);
-  const annualMultiplier = isMonthly ? 12 : 1;
-  const displayDivisor = isMonthly ? 12 : 1;
+  const removeDynamicItem = (tab, key, index) => {
+    const newDraft = draftValues[tab][key].filter((_, i) => i !== index);
+    setDraftValues((prev) => ({
+      ...prev,
+      [tab]: { ...prev[tab], [key]: newDraft }
+    }));
+
+    setValues((prev) => {
+      const newCommitted = prev[tab][key].filter((_, i) => i !== index);
+      const next = {
+        ...prev,
+        [tab]: { ...prev[tab], [key]: newCommitted }
+      };
+      persistValues(next);
+      return next;
+    });
+  };
+
+  const addDynamicItem = (tab, key, nextItem) => {
+    setDraftValues((prev) => ({
+      ...prev,
+      [tab]: { ...prev[tab], [key]: [...prev[tab][key], nextItem] }
+    }));
+
+    setValues((prev) => {
+      const next = {
+        ...prev,
+        [tab]: { ...prev[tab], [key]: [...prev[tab][key], nextItem] }
+      };
+      persistValues(next);
+      return next;
+    });
+  };
+
+  const updateDynamicDraftItem = (tab, key, index, patch) => {
+    const updated = [...draftValues[tab][key]];
+    updated[index] = { ...updated[index], ...patch };
+    setDraftValues((prev) => ({
+      ...prev,
+      [tab]: { ...prev[tab], [key]: updated }
+    }));
+  };
 
   const scaleNumericString = (value, ratio) => {
+    if (value === "" || value === null || value === undefined) {
+      return value;
+    }
     const n = Number(value);
     if (Number.isNaN(n)) {
       return value;
@@ -324,9 +439,20 @@ function App() {
         amount: scaleNumericString(acct.amount, ratio)
       }))
     },
-    expenses: Object.fromEntries(
-      Object.entries(state.expenses).map(([key, val]) => [key, scaleNumericString(val, ratio)])
-    ),
+    expenses: {
+      ...state.expenses,
+      Housing: scaleNumericString(state.expenses.Housing, ratio),
+      Groceries: scaleNumericString(state.expenses.Groceries, ratio),
+      Utilities: scaleNumericString(state.expenses.Utilities, ratio),
+      Transportation: scaleNumericString(state.expenses.Transportation, ratio),
+      Healthcare: scaleNumericString(state.expenses.Healthcare, ratio),
+      "Debt Payments": scaleNumericString(state.expenses["Debt Payments"], ratio),
+      Insurances: scaleNumericString(state.expenses.Insurances, ratio),
+      Subscriptions: state.expenses.Subscriptions.map((sub) => ({
+        ...sub,
+        amount: scaleNumericString(sub.amount, ratio)
+      }))
+    },
     wants: {
       ...state.wants,
       Dining: scaleNumericString(state.wants.Dining, ratio),
@@ -361,7 +487,7 @@ function App() {
   const grossIncome =
     toNumber(values.comp["Base Pay"]) +
     toNumber(values.comp.Bonus) +
-    toNumber(values.comp.RSU) +
+    (values.comp["Include RSU in Gross Income"] ? toNumber(values.comp.RSU) : 0) +
     toNumber(values.comp.Misc);
 
   const pretaxContrib =
@@ -380,16 +506,17 @@ function App() {
     0
   );
 
-  const annualGrossIncome = grossIncome * annualMultiplier;
-  const annualPretaxContrib = pretaxContrib * annualMultiplier;
-  const annualAfterTaxAdvantaged = afterTaxAdvantaged * annualMultiplier;
-  const annualAfterTaxCustom = afterTaxCustom * annualMultiplier;
+  const expensesFixed =
+    toNumber(values.expenses.Housing) +
+    toNumber(values.expenses.Groceries) +
+    toNumber(values.expenses.Utilities) +
+    toNumber(values.expenses.Transportation) +
+    toNumber(values.expenses.Healthcare) +
+    toNumber(values.expenses["Debt Payments"]) +
+    toNumber(values.expenses.Insurances);
 
-  const annualAdjustedGrossIncome = Math.max(annualGrossIncome - annualPretaxContrib, 0);
-  const annualDeductionsSaved = Math.max(annualPretaxContrib, 0);
-
-  const expenseTotal = Object.values(values.expenses).reduce(
-    (acc, val) => acc + toNumber(val),
+  const subscriptionsTotal = values.expenses.Subscriptions.reduce(
+    (acc, sub) => acc + toNumber(sub?.amount),
     0
   );
 
@@ -403,10 +530,15 @@ function App() {
     0
   );
 
+  const annualGrossIncome = grossIncome * annualMultiplier;
+  const annualPretaxContrib = pretaxContrib * annualMultiplier;
+  const annualAfterTaxAdvantaged = afterTaxAdvantaged * annualMultiplier;
+  const annualAfterTaxCustom = afterTaxCustom * annualMultiplier;
+  const annualAdjustedGrossIncome = Math.max(annualGrossIncome - annualPretaxContrib, 0);
   const annualInvestmentsTotal =
     annualPretaxContrib + annualAfterTaxAdvantaged + annualAfterTaxCustom;
-
-  const annualTotalOutflow = (expenseTotal + wantsTotal + hobbiesTotal) * annualMultiplier;
+  const annualTotalOutflow =
+    (expensesFixed + subscriptionsTotal + wantsTotal + hobbiesTotal) * annualMultiplier;
 
   const annualTakeHomePay =
     annualGrossIncome -
@@ -448,7 +580,6 @@ function App() {
           stateInput ? CalcStateTax(stateTaxable, stateInput, filingStatus) : 0,
           CalcFicaTax(annualGrossIncome)
         ]);
-
         const total = toNumber(federal) + toNumber(state) + toNumber(fica);
         setTaxDetails({
           federal: toNumber(federal),
@@ -458,286 +589,160 @@ function App() {
         });
       } catch (err) {
         console.error("Tax calculation failed", err);
-        setTaxDetails((prev) => ({ ...prev, total: prev.federal + prev.state + prev.fica }));
       }
     };
 
     loadTaxes();
   }, [values, annualAdjustedGrossIncome, annualGrossIncome]);
 
-  const renderBasicField = (tab, field) => {
-    const isFilingStatus = field === "Filing Status";
-
-    return (
-      <div className="settings-field" key={field}>
-        <label>{field}</label>
-        {isFilingStatus ? (
-          <select
-            value={draftValues[tab][field] || ""}
-            onChange={(e) => updateDraftField(tab, field, e.target.value)}
-            onBlur={() => commitField(tab, field)}
-          >
-            <option value="">Select filing status</option>
-            <option value="Single">Single</option>
-            <option value="Married">Married</option>
-          </select>
-        ) : (
-          <input
-            type="text"
-            value={draftValues[tab][field] || ""}
-            onChange={(e) => updateDraftField(tab, field, e.target.value)}
-            onBlur={() => commitField(tab, field)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                commitField(tab, field);
-                e.target.blur();
-              }
-            }}
-            placeholder={`Enter ${field}`}
-          />
-        )}
-      </div>
-    );
+  const displayGrossIncome = annualGrossIncome / displayDivisor;
+  const displayAdjustedGrossIncome = annualAdjustedGrossIncome / displayDivisor;
+  const displayDeductionsSaved = annualPretaxContrib / displayDivisor;
+  const displayInvestmentsTotal = annualInvestmentsTotal / displayDivisor;
+  const displayPretaxTotal = annualPretaxContrib / displayDivisor;
+  const displayAfterTaxAdvantaged = annualAfterTaxAdvantaged / displayDivisor;
+  const displayAfterTaxCustom = annualAfterTaxCustom / displayDivisor;
+  const displayTakeHomePay = annualTakeHomePay / displayDivisor;
+  const displayTaxDetails = {
+    federal: taxDetails.federal / displayDivisor,
+    state: taxDetails.state / displayDivisor,
+    fica: taxDetails.fica / displayDivisor,
+    total: taxDetails.total / displayDivisor
   };
 
-  const renderHobbiesField = (field) => (
+  const renderDynamicList = ({
+    field,
+    tab,
+    key,
+    itemNamePlaceholder,
+    addButtonText
+  }) => (
     <div className="settings-field" key={field.label}>
       <label>{field.label}</label>
-
-      {draftValues.wants.Hobbies.map((hobby, index) => (
+      {draftValues[tab][key].map((item, index) => (
         <div key={index} className="hobby-row">
           <button
             type="button"
             className="remove-hobby-button"
-            onClick={() => {
-              const newDraft = draftValues.wants.Hobbies.filter((_, i) => i !== index);
-              const newCommitted = values.wants.Hobbies.filter((_, i) => i !== index);
-
-              setDraftValues((prev) => ({
-                ...prev,
-                wants: { ...prev.wants, Hobbies: newDraft }
-              }));
-
-              setValues((prev) => {
-                const next = {
-                  ...prev,
-                  wants: { ...prev.wants, Hobbies: newCommitted }
-                };
-                persistValues(next);
-                return next;
-              });
-            }}
+            onClick={() => removeDynamicItem(tab, key, index)}
           >
             ×
           </button>
-
           <input
             type="text"
-            placeholder="Hobby name"
-            value={hobby.name || ""}
-            onChange={(e) => {
-              const updated = [...draftValues.wants.Hobbies];
-              updated[index] = {
-                ...updated[index],
-                name: e.target.value
-              };
-              setDraftValues((prev) => ({
-                ...prev,
-                wants: { ...prev.wants, Hobbies: updated }
-              }));
-            }}
-            onBlur={() => commitHobby(index)}
+            placeholder={itemNamePlaceholder}
+            value={item.name || ""}
+            onChange={(e) => updateDynamicDraftItem(tab, key, index, { name: e.target.value })}
+            onBlur={() => commitDynamicItem(tab, key, index)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                commitHobby(index);
+                commitDynamicItem(tab, key, index);
                 e.target.blur();
               }
             }}
           />
-
           <input
             type="number"
             placeholder="Amount"
-            value={hobby.amount || ""}
-            onChange={(e) => {
-              const updated = [...draftValues.wants.Hobbies];
-              updated[index] = {
-                ...updated[index],
-                amount: e.target.value
-              };
-              setDraftValues((prev) => ({
-                ...prev,
-                wants: { ...prev.wants, Hobbies: updated }
-              }));
-            }}
-            onBlur={() => commitHobby(index)}
+            value={item.amount || ""}
+            onChange={(e) => updateDynamicDraftItem(tab, key, index, { amount: e.target.value })}
+            onBlur={() => commitDynamicItem(tab, key, index)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                commitHobby(index);
+                commitDynamicItem(tab, key, index);
                 e.target.blur();
               }
             }}
           />
         </div>
       ))}
-
       <button
         type="button"
         className="add-hobby-button"
-        onClick={() => {
-          const newHobby = { name: "", amount: "" };
-
-          setDraftValues((prev) => ({
-            ...prev,
-            wants: {
-              ...prev.wants,
-              Hobbies: [...prev.wants.Hobbies, newHobby]
-            }
-          }));
-
-          setValues((prev) => {
-            const next = {
-              ...prev,
-              wants: {
-                ...prev.wants,
-                Hobbies: [...prev.wants.Hobbies, newHobby]
-              }
-            };
-            persistValues(next);
-            return next;
-          });
-        }}
+        onClick={() => addDynamicItem(tab, key, { name: "", amount: "" })}
       >
-        + Add Hobby
-      </button>
-    </div>
-  );
-
-  const renderCustomAccountsField = (field) => (
-    <div className="settings-field" key={field.label}>
-      <label>{field.label}</label>
-
-      {draftValues.savings.CustomAccounts.map((acct, index) => (
-        <div key={index} className="hobby-row">
-          <button
-            type="button"
-            className="remove-hobby-button"
-            onClick={() => {
-              const newDraft = draftValues.savings.CustomAccounts.filter((_, i) => i !== index);
-              const newCommitted = values.savings.CustomAccounts.filter((_, i) => i !== index);
-
-              setDraftValues((prev) => ({
-                ...prev,
-                savings: { ...prev.savings, CustomAccounts: newDraft }
-              }));
-
-              setValues((prev) => {
-                const next = {
-                  ...prev,
-                  savings: { ...prev.savings, CustomAccounts: newCommitted }
-                };
-                persistValues(next);
-                return next;
-              });
-            }}
-          >
-            ×
-          </button>
-
-          <input
-            type="text"
-            placeholder="Account name"
-            value={acct.name || ""}
-            onChange={(e) => {
-              const updated = [...draftValues.savings.CustomAccounts];
-              updated[index] = {
-                ...updated[index],
-                name: e.target.value
-              };
-              setDraftValues((prev) => ({
-                ...prev,
-                savings: { ...prev.savings, CustomAccounts: updated }
-              }));
-            }}
-            onBlur={() => commitCustomAccount(index)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                commitCustomAccount(index);
-                e.target.blur();
-              }
-            }}
-          />
-
-          <input
-            type="number"
-            placeholder="Amount"
-            value={acct.amount || ""}
-            onChange={(e) => {
-              const updated = [...draftValues.savings.CustomAccounts];
-              updated[index] = {
-                ...updated[index],
-                amount: e.target.value
-              };
-              setDraftValues((prev) => ({
-                ...prev,
-                savings: { ...prev.savings, CustomAccounts: updated }
-              }));
-            }}
-            onBlur={() => commitCustomAccount(index)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                commitCustomAccount(index);
-                e.target.blur();
-              }
-            }}
-          />
-        </div>
-      ))}
-
-      <button
-        type="button"
-        className="add-hobby-button"
-        onClick={() => {
-          const newAccount = { name: "", amount: "" };
-
-          setDraftValues((prev) => ({
-            ...prev,
-            savings: {
-              ...prev.savings,
-              CustomAccounts: [...prev.savings.CustomAccounts, newAccount]
-            }
-          }));
-
-          setValues((prev) => {
-            const next = {
-              ...prev,
-              savings: {
-                ...prev.savings,
-                CustomAccounts: [...prev.savings.CustomAccounts, newAccount]
-              }
-            };
-            persistValues(next);
-            return next;
-          });
-        }}
-      >
-        + Add Account
+        {addButtonText}
       </button>
     </div>
   );
 
   const renderStandardFields = () =>
-    tabFields[activeTab].map((field) => {
+    tabFields[activeTab]?.map((field) => {
       if (typeof field === "string") {
-        return renderBasicField(activeTab, field);
+        const isFilingStatus = field === "Filing Status";
+        return (
+          <div className="settings-field" key={field}>
+            <label>{field}</label>
+            {isFilingStatus ? (
+              <select
+                value={draftValues[activeTab][field] || ""}
+                onChange={(e) => updateDraftField(activeTab, field, e.target.value)}
+                onBlur={() => commitField(activeTab, field)}
+              >
+                <option value="">Select filing status</option>
+                <option value="Single">Single</option>
+                <option value="Married">Married</option>
+              </select>
+            ) : (
+              <>
+                <input
+                  type="text"
+                  value={draftValues[activeTab][field] || ""}
+                  onChange={(e) => updateDraftField(activeTab, field, e.target.value)}
+                  onBlur={() => commitField(activeTab, field)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      commitField(activeTab, field);
+                      e.target.blur();
+                    }
+                  }}
+                  placeholder={`Enter ${field}`}
+                />
+                {field === "RSU" && (
+                  <label className="rsu-include-toggle">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(values.comp["Include RSU in Gross Income"])}
+                      onChange={(e) => commitIncludeRSU(e.target.checked)}
+                    />
+                    <span className="rsu-toggle-indicator"></span>
+                    <span>Include RSU in Gross Income</span>
+                  </label>
+                )}
+              </>
+            )}
+          </div>
+        );
       }
 
       if (field.dynamic) {
-        return renderHobbiesField(field);
+        return renderDynamicList({
+          field,
+          tab: "wants",
+          key: "Hobbies",
+          itemNamePlaceholder: "Hobby name",
+          addButtonText: "+ Add Hobby"
+        });
       }
 
       if (field.dynamicSavings) {
-        return renderCustomAccountsField(field);
+        return renderDynamicList({
+          field,
+          tab: "savings",
+          key: "CustomAccounts",
+          itemNamePlaceholder: "Account name",
+          addButtonText: "+ Add Account"
+        });
+      }
+
+      if (field.dynamicExpenses) {
+        return renderDynamicList({
+          field,
+          tab: "expenses",
+          key: "Subscriptions",
+          itemNamePlaceholder: "Subscription name",
+          addButtonText: "+ Add Subscription"
+        });
       }
 
       return null;
@@ -755,10 +760,17 @@ function App() {
           {isGeneratingInsights ? "Generating..." : "Regenerate Insights"}
         </button>
       </div>
-
+      <div className="settings-field">
+        <label>AI Prompt</label>
+        <textarea
+          className="ai-prompt-input"
+          value={aiPrompt}
+          onChange={(e) => setAiPrompt(e.target.value)}
+          rows={4}
+        />
+      </div>
       <div className="ai-output-shell">
         <label className="ai-output-label">AI Insight Output</label>
-
         {isGeneratingInsights ? (
           <div className="ai-loading-state" role="status" aria-live="polite">
             <div className="ai-loading-orb"></div>

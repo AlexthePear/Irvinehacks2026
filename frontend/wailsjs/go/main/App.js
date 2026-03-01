@@ -22,6 +22,10 @@ export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }
 
+export function ReadFromJson() {
+  return window['go']['main']['App']['ReadFromJson']();
+}
+
 export function WriteToJson(arg1) {
   return window['go']['main']['App']['WriteToJson'](arg1);
 }

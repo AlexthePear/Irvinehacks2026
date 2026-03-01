@@ -56,6 +56,30 @@ func (a *App) WriteToJson(values map[string]map[string]interface{}) error {
 	return encoder.Encode(values)
 }
 
+// ReadFromJson loads saved planner values from output.json.
+// If the file does not exist, it returns an empty object.
+func (a *App) ReadFromJson() (map[string]interface{}, error) {
+	file, err := os.Open("output.json")
+	if err != nil {
+		if os.IsNotExist(err) {
+			return map[string]interface{}{}, nil
+		}
+		return nil, err
+	}
+	defer file.Close()
+
+	var data map[string]interface{}
+	if err := json.NewDecoder(file).Decode(&data); err != nil {
+		return nil, err
+	}
+
+	if data == nil {
+		return map[string]interface{}{}, nil
+	}
+
+	return data, nil
+}
+
 // CalcFederalTax exposes the federal tax calculation to the frontend.
 func (a *App) CalcFederalTax(taxableIncome float64, filingStatus string) (float64, error) {
 	return FederalTaxOwed(taxableIncome, filingStatus)
