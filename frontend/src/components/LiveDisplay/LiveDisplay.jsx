@@ -67,29 +67,6 @@ function LiveDisplay({
           <p className="metric-sub positive">
             After-tax custom savings: ${fmt(afterTaxCustom)}
           </p>
-          <button
-            type="button"
-            className="show-more-button"
-            onClick={() => setShowInvestMore((prev) => !prev)}
-          >
-            {showInvestMore ? "Hide breakdown" : "Show more"}
-          </button>
-          {showInvestMore && (
-            <div className="tax-breakdown">
-              <div className="tax-row">
-                <span>Pretax (401k/HSA/IRA)</span>
-                <span>${fmt(pretaxTotal)}</span>
-              </div>
-              <div className="tax-row">
-                <span>After-tax advantaged (Roth/529)</span>
-                <span>${fmt(afterTaxAdvantaged)}</span>
-              </div>
-              <div className="tax-row">
-                <span>After-tax custom</span>
-                <span>${fmt(afterTaxCustom)}</span>
-              </div>
-            </div>
-          )}
         </div>
 
         <div className="metric-card">

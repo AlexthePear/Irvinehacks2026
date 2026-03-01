@@ -1,45 +1,42 @@
 {
   "comp": {
-    "Base Pay": "11958.33",
-    "Bonus": "1195.83",
-    "Filing Status": "Single",
-    "Location (State)": "california",
-    "Misc": "0",
-    "RSU": "4166.67"
+    "Base Pay": "",
+    "Bonus": "",
+    "Filing Status": "",
+    "Include RSU in Gross Income": false,
+    "Location (State)": "",
+    "Misc": "",
+    "RSU": ""
   },
   "expenses": {
-    "Debt Payments": "0",
-    "Groceries": "400",
-    "Healthcare": "10",
-    "Housing": "3000",
-    "Insurances": "100",
-    "Transportation": "100",
-    "Utilities": "50"
+    "Debt Payments": "",
+    "Groceries": "",
+    "Healthcare": "",
+    "Housing": "",
+    "Insurances": "",
+    "Subscriptions": [
+      {
+        "amount": "",
+        "name": ""
+      }
+    ],
+    "Transportation": "",
+    "Utilities": ""
   },
   "savings": {
-    "401k": "2041.67",
-    "529": "833.33",
-    "Back Door": "0",
-    "CustomAccounts": [
-      {
-        "amount": "2700",
-        "name": "brokerage"
-      }
-    ],
-    "HSA": "266.67",
-    "IRA": "0",
-    "Roth 401k": "0",
-    "Roth IRA": "625"
+    "401k": "",
+    "529": "",
+    "Back Door": "",
+    "CustomAccounts": [],
+    "HSA": "",
+    "IRA": "",
+    "Roth 401k": "",
+    "Roth IRA": ""
   },
   "wants": {
-    "Dining": "1000",
-    "Entertainment": "500",
-    "Hobbies": [
-      {
-        "amount": "600",
-        "name": "Snowboarding"
-      }
-    ],
-    "Travel": "500"
+    "Dining": "",
+    "Entertainment": "",
+    "Hobbies": [],
+    "Travel": ""
   }
 }

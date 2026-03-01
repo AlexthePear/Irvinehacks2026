@@ -27,8 +27,17 @@ const tabFields = {
     "529",
     { label: "Custom Accounts", dynamicSavings: true }
   ],
-  expenses: ["Housing", "Groceries", "Utilities", "Transportation", "Healthcare", "Debt Payments", "Insurances"],
-  wants: ["Dining", "Entertainment", "Travel", { label: "Hobbies", dynamic: true }]
+  expenses: [
+    "Housing",
+    "Groceries",
+    "Utilities",
+    "Transportation",
+    "Healthcare",
+    "Debt Payments",
+    "Insurances"
+  ],
+  wants: ["Dining", "Entertainment", "Travel", { label: "Hobbies", dynamic: true }, 
+    { label: "Subscriptions", dynamicExpenses: true }]
 };
 
 const initialState = {
@@ -36,6 +45,7 @@ const initialState = {
     "Base Pay": "",
     "Bonus": "",
     "RSU": "",
+    "Include RSU in Gross Income": false,
     "Location (State)": "",
     "Filing Status": "",
     "Misc": ""
@@ -57,7 +67,8 @@ const initialState = {
     Transportation: "",
     Healthcare: "",
     "Debt Payments": "",
-    Insurances: ""
+    Insurances: "",
+    Subscriptions: []
   },
   wants: {
     Dining: "",
@@ -131,6 +142,34 @@ function App() {
     });
   };
 
+  const commitSubscription = (index) => {
+    setValues((prev) => {
+      const updated = [...prev.expenses.Subscriptions];
+      updated[index] = draftValues.expenses.Subscriptions[index];
+      const next = {
+        ...prev,
+        expenses: { ...prev.expenses, Subscriptions: updated }
+      };
+      persistValues(next);
+      return next;
+    });
+  };
+
+  const commitIncludeRSU = (checked) => {
+    setDraftValues((prev) => ({
+      ...prev,
+      comp: { ...prev.comp, "Include RSU in Gross Income": checked }
+    }));
+    setValues((prev) => {
+      const next = {
+        ...prev,
+        comp: { ...prev.comp, "Include RSU in Gross Income": checked }
+      };
+      persistValues(next);
+      return next;
+    });
+  };
+
   const toNumber = (val) => Number(val || 0);
   const annualMultiplier = isMonthly ? 12 : 1;
   const displayDivisor = isMonthly ? 12 : 1;
@@ -168,7 +207,18 @@ function App() {
         }))
       },
       expenses: Object.fromEntries(
-        Object.entries(state.expenses).map(([key, val]) => [key, scaleNumericString(val, ratio)])
+        Object.entries(state.expenses).map(([key, val]) => {
+          if (key === "Subscriptions" && Array.isArray(val)) {
+            return [
+              key,
+              val.map((sub) => ({
+                ...sub,
+                amount: scaleNumericString(sub.amount, ratio)
+              }))
+            ];
+          }
+          return [key, scaleNumericString(val, ratio)];
+        })
       ),
       wants: {
         ...state.wants,
@@ -210,7 +260,7 @@ function App() {
   const grossIncome =
     toNumber(values.comp["Base Pay"]) +
     toNumber(values.comp["Bonus"]) +
-    toNumber(values.comp["RSU"]) +
+    (values.comp["Include RSU in Gross Income"] ? toNumber(values.comp["RSU"]) : 0) +
     toNumber(values.comp["Misc"]);
 
   const pretaxContrib =
@@ -238,7 +288,12 @@ function App() {
   const annualDeductionsSaved = Math.max(annualPretaxContrib, 0);
 
   const expenseTotal = Object.values(values.expenses).reduce(
-    (acc, val) => acc + toNumber(val),
+    (acc, val) => {
+      if (Array.isArray(val)) {
+        return acc + val.reduce((sum, item) => sum + toNumber(item?.amount), 0);
+      }
+      return acc + toNumber(val);
+    },
     0
   );
 
@@ -374,27 +429,40 @@ function App() {
                       <option value="Married">Married</option>
                     </select>
                   ) : (
-                    <input
-                      type="text"
-                      value={draftValues[activeTab][field] || ""}
-                      onChange={(e) =>
-                        setDraftValues({
-                          ...draftValues,
-                          [activeTab]: {
-                            ...draftValues[activeTab],
-                            [field]: e.target.value
-                          }
-                        })
-                      }
-                      onBlur={() => commitField(activeTab, field)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          commitField(activeTab, field);
-                          e.target.blur();
+                    <>
+                      <input
+                        type="text"
+                        value={draftValues[activeTab][field] || ""}
+                        onChange={(e) =>
+                          setDraftValues({
+                            ...draftValues,
+                            [activeTab]: {
+                              ...draftValues[activeTab],
+                              [field]: e.target.value
+                            }
+                          })
                         }
-                      }}
-                      placeholder={`Enter ${field}`}
-                    />
+                        onBlur={() => commitField(activeTab, field)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            commitField(activeTab, field);
+                            e.target.blur();
+                          }
+                        }}
+                        placeholder={`Enter ${field}`}
+                      />
+                      {field === "RSU" && (
+                        <label className="rsu-include-toggle">
+                          <input
+                            type="checkbox"
+                            checked={Boolean(values.comp["Include RSU in Gross Income"])}
+                            onChange={(e) => commitIncludeRSU(e.target.checked)}
+                          />
+                          <span className="rsu-toggle-indicator"></span>
+                          <span>Include RSU in Gross Income</span>
+                        </label>
+                      )}
+                    </>
                   )}
                 </div>
               );
@@ -629,6 +697,125 @@ function App() {
                     }}
                   >
                     + Add Account
+                  </button>
+                </div>
+              );
+            }
+
+            if (field.dynamicExpenses) {
+              return (
+                <div className="settings-field" key={field.label}>
+                  <label>{field.label}</label>
+
+                  {draftValues.expenses.Subscriptions.map((sub, index) => (
+                    <div key={index} className="hobby-row">
+                      <button
+                        type="button"
+                        className="remove-hobby-button"
+                        onClick={() => {
+                          const newDraft = draftValues.expenses.Subscriptions.filter(
+                            (_, i) => i !== index
+                          );
+                          const newCommitted = values.expenses.Subscriptions.filter(
+                            (_, i) => i !== index
+                          );
+
+                          setDraftValues({
+                            ...draftValues,
+                            expenses: { ...draftValues.expenses, Subscriptions: newDraft }
+                          });
+
+                          setValues((prev) => {
+                            const next = {
+                              ...prev,
+                              expenses: { ...prev.expenses, Subscriptions: newCommitted }
+                            };
+                            persistValues(next);
+                            return next;
+                          });
+                        }}
+                      >
+                        ×
+                      </button>
+
+                      <input
+                        type="text"
+                        placeholder="Subscription name"
+                        value={sub.name || ""}
+                        onChange={(e) => {
+                          const updated = [...draftValues.expenses.Subscriptions];
+                          updated[index] = {
+                            ...updated[index],
+                            name: e.target.value
+                          };
+                          setDraftValues({
+                            ...draftValues,
+                            expenses: { ...draftValues.expenses, Subscriptions: updated }
+                          });
+                        }}
+                        onBlur={() => commitSubscription(index)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            commitSubscription(index);
+                            e.target.blur();
+                          }
+                        }}
+                      />
+
+                      <input
+                        type="number"
+                        placeholder="Amount"
+                        value={sub.amount || ""}
+                        onChange={(e) => {
+                          const updated = [...draftValues.expenses.Subscriptions];
+                          updated[index] = {
+                            ...updated[index],
+                            amount: e.target.value
+                          };
+                          setDraftValues({
+                            ...draftValues,
+                            expenses: { ...draftValues.expenses, Subscriptions: updated }
+                          });
+                        }}
+                        onBlur={() => commitSubscription(index)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            commitSubscription(index);
+                            e.target.blur();
+                          }
+                        }}
+                      />
+                    </div>
+                  ))}
+
+                  <button
+                    type="button"
+                    className="add-hobby-button"
+                    onClick={() => {
+                      const newSubscription = { name: "", amount: "" };
+
+                      setDraftValues({
+                        ...draftValues,
+                        expenses: {
+                          ...draftValues.expenses,
+                          Subscriptions: [...draftValues.expenses.Subscriptions, newSubscription]
+                        }
+                      });
+
+                      setValues((prev) => {
+                        const next = {
+                          ...prev,
+                          expenses: {
+                            ...prev.expenses,
+                            Subscriptions: [...prev.expenses.Subscriptions, newSubscription]
+                          }
+                        };
+                        persistValues(next);
+                        return next;
+                      });
+                    }}
+                  >
+                    + Add Subscription
                   </button>
                 </div>
               );
