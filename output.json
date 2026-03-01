@@ -26,6 +26,7 @@
   },
   "savings": {
     "401k": "",
+    "401k Is Roth": false,
     "529": "",
     "Back Door": "",
     "CustomAccounts": [],

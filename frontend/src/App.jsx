@@ -57,6 +57,7 @@ const initialState = {
   },
   savings: {
     "401k": "",
+    "401k Is Roth": false,
     IRA: "",
     HSA: "",
     "Back Door": "",
@@ -121,6 +122,7 @@ const normalizeLoadedState = (loaded) => {
     savings: {
       ...initialState.savings,
       ...savings,
+      "401k Is Roth": Boolean(savings["401k Is Roth"]),
       CustomAccounts: Array.isArray(savings.CustomAccounts) ? savings.CustomAccounts : []
     },
     expenses: {
@@ -349,6 +351,21 @@ function App() {
     });
   };
 
+  const commit401kIsRoth = (checked) => {
+    setDraftValues((prev) => ({
+      ...prev,
+      savings: { ...prev.savings, "401k Is Roth": checked }
+    }));
+    setValues((prev) => {
+      const next = {
+        ...prev,
+        savings: { ...prev.savings, "401k Is Roth": checked }
+      };
+      persistValues(next);
+      return next;
+    });
+  };
+
   const commitDynamicItem = (tab, key, index) => {
     setValues((prev) => {
       const updated = [...prev[tab][key]];
@@ -491,11 +508,12 @@ function App() {
     toNumber(values.comp.Misc);
 
   const pretaxContrib =
-    toNumber(values.savings["401k"]) +
+    (values.savings["401k Is Roth"] ? 0 : toNumber(values.savings["401k"])) +
     toNumber(values.savings.HSA) +
     toNumber(values.savings.IRA);
 
   const afterTaxAdvantaged =
+    (values.savings["401k Is Roth"] ? toNumber(values.savings["401k"]) : 0) +
     toNumber(values.savings["Roth 401k"]) +
     toNumber(values.savings["Roth IRA"]) +
     toNumber(values.savings["Back Door"]) +
@@ -693,6 +711,17 @@ function App() {
                     />
                     <span className="rsu-toggle-indicator"></span>
                     <span>Include RSU in Gross Income</span>
+                  </label>
+                )}
+                {field === "401k" && (
+                  <label className="rsu-include-toggle">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(values.savings["401k Is Roth"])}
+                      onChange={(e) => commit401kIsRoth(e.target.checked)}
+                    />
+                    <span className="rsu-toggle-indicator"></span>
+                    <span>Roth 401k</span>
                   </label>
                 )}
               </>
