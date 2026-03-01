@@ -535,6 +535,7 @@ function App() {
   const annualAfterTaxAdvantaged = afterTaxAdvantaged * annualMultiplier;
   const annualAfterTaxCustom = afterTaxCustom * annualMultiplier;
   const annualAdjustedGrossIncome = Math.max(annualGrossIncome - annualPretaxContrib, 0);
+  const annualDeductionsSaved = Math.max(annualPretaxContrib, 0);
   const annualInvestmentsTotal =
     annualPretaxContrib + annualAfterTaxAdvantaged + annualAfterTaxCustom;
   const annualTotalOutflow =
@@ -594,21 +595,6 @@ function App() {
 
     loadTaxes();
   }, [values, annualAdjustedGrossIncome, annualGrossIncome]);
-
-  const displayGrossIncome = annualGrossIncome / displayDivisor;
-  const displayAdjustedGrossIncome = annualAdjustedGrossIncome / displayDivisor;
-  const displayDeductionsSaved = annualPretaxContrib / displayDivisor;
-  const displayInvestmentsTotal = annualInvestmentsTotal / displayDivisor;
-  const displayPretaxTotal = annualPretaxContrib / displayDivisor;
-  const displayAfterTaxAdvantaged = annualAfterTaxAdvantaged / displayDivisor;
-  const displayAfterTaxCustom = annualAfterTaxCustom / displayDivisor;
-  const displayTakeHomePay = annualTakeHomePay / displayDivisor;
-  const displayTaxDetails = {
-    federal: taxDetails.federal / displayDivisor,
-    state: taxDetails.state / displayDivisor,
-    fica: taxDetails.fica / displayDivisor,
-    total: taxDetails.total / displayDivisor
-  };
 
   const renderDynamicList = ({
     field,
@@ -759,15 +745,6 @@ function App() {
         >
           {isGeneratingInsights ? "Generating..." : "Regenerate Insights"}
         </button>
-      </div>
-      <div className="settings-field">
-        <label>AI Prompt</label>
-        <textarea
-          className="ai-prompt-input"
-          value={aiPrompt}
-          onChange={(e) => setAiPrompt(e.target.value)}
-          rows={4}
-        />
       </div>
       <div className="ai-output-shell">
         <label className="ai-output-label">AI Insight Output</label>
