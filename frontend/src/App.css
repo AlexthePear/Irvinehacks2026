@@ -22,6 +22,10 @@
     --panel-border-hot: rgba(255, 47, 146, 0.38);
     --form-border-color: rgba(68, 244, 255, 0.26);
     --form-focus-border-color: rgba(255, 47, 146, 0.68);
+    --hud-line-cyan: rgba(68, 244, 255, 0.4);
+    --hud-line-pink: rgba(255, 47, 146, 0.36);
+    --hud-bracket-cyan: rgba(68, 244, 255, 0.22);
+    --hud-bracket-pink: rgba(255, 47, 146, 0.2);
     --shadow-panel:
         0 26px 80px rgba(0, 0, 0, 0.52),
         0 0 0 1px rgba(68, 244, 255, 0.08) inset,
@@ -45,12 +49,7 @@
     overflow: hidden;
     isolation: isolate;
     color: var(--ink);
-    background:
-        radial-gradient(circle at 8% 14%, rgba(68, 244, 255, 0.14), transparent 30%),
-        radial-gradient(circle at 86% 16%, rgba(139, 93, 255, 0.15), transparent 28%),
-        radial-gradient(circle at 12% 88%, rgba(255, 47, 146, 0.18), transparent 30%),
-        radial-gradient(circle at 88% 80%, rgba(68, 244, 255, 0.1), transparent 26%),
-        linear-gradient(125deg, var(--bg-0) 0%, var(--bg-1) 28%, var(--bg-2) 62%, var(--bg-3) 100%);
+    background: #060911;
 }
 
 #App > * {
@@ -59,57 +58,11 @@
 }
 
 #App::before {
-    content: "";
-    position: absolute;
-    inset: -6%;
-    background-image:
-        linear-gradient(rgba(68, 244, 255, 0.085) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 47, 146, 0.085) 1px, transparent 1px),
-        linear-gradient(rgba(68, 244, 255, 0.06) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 47, 146, 0.06) 1px, transparent 1px),
-        linear-gradient(rgba(68, 244, 255, 0.045) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 47, 146, 0.045) 1px, transparent 1px),
-        linear-gradient(rgba(68, 244, 255, 0.033) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 47, 146, 0.033) 1px, transparent 1px),
-        linear-gradient(rgba(68, 244, 255, 0.022) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 47, 146, 0.022) 1px, transparent 1px),
-        linear-gradient(rgba(68, 244, 255, 0.016) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 47, 146, 0.016) 1px, transparent 1px);
-    background-size:
-        54px 54px, 54px 54px,
-        82px 82px, 82px 82px,
-        118px 118px, 118px 118px,
-        162px 162px, 162px 162px,
-        214px 214px, 214px 214px,
-        288px 288px, 288px 288px;
-    background-position:
-        0 0, 0 0,
-        17px 11px, 17px 11px,
-        -26px 31px, -26px 31px,
-        46px -18px, 46px -18px,
-        -42px -24px, -42px -24px,
-        74px 28px, 74px 28px;
-    opacity: 0.86;
-    mix-blend-mode: screen;
-    pointer-events: none;
-    z-index: 0;
-    animation: gridDrift 28s linear infinite;
+    display: none;
 }
 
 #App::after {
-    content: "";
-    position: absolute;
-    inset: -18%;
-    background:
-        radial-gradient(circle at 24% 72%, rgba(255, 47, 146, 0.16), transparent 28%),
-        radial-gradient(circle at 74% 24%, rgba(68, 244, 255, 0.12), transparent 26%),
-        radial-gradient(circle at 48% 42%, rgba(139, 93, 255, 0.12), transparent 32%);
-    filter: blur(28px);
-    opacity: 0.88;
-    mix-blend-mode: screen;
-    pointer-events: none;
-    z-index: 1;
-    animation: auroraPulse 10s ease-in-out infinite alternate;
+    display: none;
 }
 
 body::before,
@@ -121,28 +74,11 @@ body::after {
 }
 
 body::before {
-    z-index: -2;
-    background-image:
-        radial-gradient(circle, rgba(68, 244, 255, 0.12) 0 1.5px, transparent 1.6px),
-        radial-gradient(circle, rgba(255, 47, 146, 0.09) 0 1.5px, transparent 1.6px),
-        radial-gradient(circle, rgba(255, 224, 139, 0.06) 0 1px, transparent 1.1px);
-    background-size: 140px 140px, 170px 170px, 220px 220px;
-    background-position: 0 0, 40px 28px, 88px 64px;
-    animation: particleFloat 13s ease-in-out infinite alternate;
+    display: none;
 }
 
 body::after {
-    z-index: -1;
-    opacity: 0.16;
-    background:
-        repeating-linear-gradient(
-            180deg,
-            rgba(255, 255, 255, 0.08) 0,
-            rgba(255, 255, 255, 0.08) 1px,
-            transparent 1px,
-            transparent 4px
-        );
-    animation: scanlineShift 10s linear infinite;
+    display: none;
 }
 
 @keyframes particleFloat {
@@ -314,24 +250,7 @@ body::after {
 
 .page-shell::before,
 .page-shell::after {
-    content: "";
-    position: absolute;
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 0;
-    filter: blur(18px);
-}
-
-.page-shell::before {
-    width: 420px;
-    height: 420px;
-    background: radial-gradient(circle, rgba(255, 47, 146, 0.16), transparent 68%);
-}
-
-.page-shell::after {
-    width: 320px;
-    height: 320px;
-    background: radial-gradient(circle, rgba(68, 244, 255, 0.1), transparent 70%);
+    display: none;
 }
 
 .page-shell > * {
@@ -417,14 +336,31 @@ body::after {
 .panel-shell {
     position: relative;
     width: 100%;
-    padding: 28px;
+    padding: 34px 30px 30px;
     box-sizing: border-box;
-    border: 1px solid var(--panel-border);
-    border-radius: 24px;
+    border: 0;
+    border-radius: 0;
     overflow: hidden;
-    background: var(--panel-bg);
-    box-shadow: var(--shadow-panel);
-    backdrop-filter: blur(18px);
+    clip-path: polygon(
+        0 28px,
+        28px 0,
+        calc(100% - 112px) 0,
+        calc(100% - 84px) 10px,
+        calc(100% - 24px) 10px,
+        100% 36px,
+        100% calc(100% - 30px),
+        calc(100% - 30px) 100%,
+        102px 100%,
+        66px calc(100% - 12px),
+        24px calc(100% - 12px),
+        0 calc(100% - 38px)
+    );
+    background: rgba(8, 12, 24, 0.92);
+    box-shadow:
+        0 26px 64px rgba(0, 0, 0, 0.6),
+        0 0 0 1px rgba(68, 244, 255, 0.08),
+        0 0 0 2px rgba(255, 47, 146, 0.02);
+    backdrop-filter: blur(12px);
 }
 
 .panel-shell::before {
@@ -432,21 +368,45 @@ body::after {
     position: absolute;
     inset: 0;
     background:
-        linear-gradient(112deg, transparent 24%, rgba(68, 244, 255, 0.085) 42%, rgba(255, 47, 146, 0.06) 52%, transparent 74%);
-    opacity: 0.7;
+        linear-gradient(90deg, rgba(68, 244, 255, 0.9), rgba(68, 244, 255, 0.9)) 32px 0 / 116px 2px no-repeat,
+        linear-gradient(90deg, rgba(68, 244, 255, 0.9), rgba(68, 244, 255, 0.9)) 160px 0 / 28px 2px no-repeat,
+        linear-gradient(180deg, rgba(68, 244, 255, 0.86), rgba(68, 244, 255, 0.86)) 0 42px / 2px 88px no-repeat,
+        linear-gradient(180deg, rgba(68, 244, 255, 0.86), rgba(68, 244, 255, 0.86)) 0 144px / 2px 30px no-repeat,
+        linear-gradient(90deg, rgba(255, 47, 146, 0.88), rgba(255, 47, 146, 0.88)) calc(100% - 182px) 10px / 72px 2px no-repeat,
+        linear-gradient(90deg, rgba(255, 47, 146, 0.88), rgba(255, 47, 146, 0.88)) calc(100% - 100px) 10px / 26px 2px no-repeat,
+        linear-gradient(180deg, rgba(255, 47, 146, 0.84), rgba(255, 47, 146, 0.84)) calc(100% - 2px) 48px / 2px 74px no-repeat,
+        linear-gradient(180deg, rgba(255, 47, 146, 0.84), rgba(255, 47, 146, 0.84)) calc(100% - 2px) 136px / 2px 24px no-repeat,
+        linear-gradient(90deg, rgba(255, 47, 146, 0.8), rgba(255, 47, 146, 0.8)) 34px calc(100% - 2px) / 78px 2px no-repeat,
+        linear-gradient(90deg, rgba(255, 47, 146, 0.8), rgba(255, 47, 146, 0.8)) 124px calc(100% - 2px) / 24px 2px no-repeat,
+        linear-gradient(90deg, rgba(68, 244, 255, 0.84), rgba(68, 244, 255, 0.84)) calc(100% - 152px) calc(100% - 2px) / 54px 2px no-repeat,
+        linear-gradient(90deg, rgba(68, 244, 255, 0.84), rgba(68, 244, 255, 0.84)) calc(100% - 88px) calc(100% - 2px) / 22px 2px no-repeat,
+        linear-gradient(135deg, transparent 42%, rgba(68, 244, 255, 0.4) 47%, rgba(68, 244, 255, 0.4) 53%, transparent 58%) 10px 10px / 22px 22px no-repeat,
+        linear-gradient(-45deg, transparent 42%, rgba(255, 47, 146, 0.36) 47%, rgba(255, 47, 146, 0.36) 53%, transparent 58%) calc(100% - 30px) calc(100% - 30px) / 22px 22px no-repeat;
     pointer-events: none;
-    animation: panelSweep 9s linear infinite;
 }
 
 .panel-shell::after {
     content: "";
     position: absolute;
-    inset: 1px;
-    border-radius: 23px;
-    border: 1px solid rgba(255, 255, 255, 0.025);
+    inset: 10px;
+    clip-path: polygon(
+        0 18px,
+        18px 0,
+        calc(100% - 62px) 0,
+        calc(100% - 46px) 6px,
+        calc(100% - 14px) 6px,
+        100% 24px,
+        100% calc(100% - 18px),
+        calc(100% - 18px) 100%,
+        64px 100%,
+        42px calc(100% - 6px),
+        14px calc(100% - 6px),
+        0 calc(100% - 24px)
+    );
+    border: 1px solid rgba(255, 255, 255, 0.03);
     background:
-        radial-gradient(circle at top right, rgba(255, 47, 146, 0.07), transparent 26%),
-        radial-gradient(circle at bottom left, rgba(68, 244, 255, 0.06), transparent 24%);
+        linear-gradient(90deg, rgba(68, 244, 255, 0.16), transparent) left 18px top 14px / 34px 2px no-repeat,
+        linear-gradient(90deg, transparent, rgba(255, 47, 146, 0.14)) right 18px bottom 14px / 38px 2px no-repeat;
     pointer-events: none;
 }
 
@@ -680,28 +640,23 @@ body::after {
     min-height: 420px;
     height: min(62vh, 460px);
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 24px;
     box-sizing: border-box;
-    border: 1px solid rgba(255, 47, 146, 0.22);
-    border-radius: 20px;
-    background:
-        linear-gradient(180deg, rgba(12, 18, 36, 0.86), rgba(7, 10, 22, 0.95)),
-        radial-gradient(circle at top right, rgba(68, 244, 255, 0.05), transparent 28%);
+    border: 1px solid rgba(68, 244, 255, 0.12);
+    border-radius: 12px;
+    background: rgba(10, 14, 26, 0.9);
     box-shadow:
-        0 0 0 1px rgba(68, 244, 255, 0.05) inset,
+        0 0 0 1px rgba(68, 244, 255, 0.03) inset,
         inset 0 24px 48px rgba(0, 0, 0, 0.24);
 }
 
 .settings-window::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: 20px;
-    background-image:
-        linear-gradient(rgba(68, 244, 255, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 47, 146, 0.03) 1px, transparent 1px);
-    background-size: 28px 28px;
-    pointer-events: none;
+    display: none;
+}
+
+.settings-window::after {
+    display: none;
 }
 
 .settings-window > * {
@@ -831,10 +786,9 @@ body::after {
 .ai-loading-state {
     min-height: 280px;
     padding: 24px;
-    border: 1px solid rgba(255, 47, 146, 0.22);
-    border-radius: 18px;
-    background:
-        linear-gradient(180deg, rgba(16, 12, 30, 0.84), rgba(8, 12, 26, 0.94));
+    border: 1px solid rgba(255, 47, 146, 0.14);
+    border-radius: 10px;
+    background: rgba(12, 14, 26, 0.9);
     box-shadow:
         0 0 0 1px rgba(255, 47, 146, 0.05) inset,
         inset 0 24px 32px rgba(0, 0, 0, 0.22);
@@ -1006,30 +960,26 @@ body::after {
 
 .investment-row {
     position: relative;
-    border: 1px solid rgba(68, 244, 255, 0.16);
-    border-radius: 18px;
+    border: 1px solid rgba(68, 244, 255, 0.12);
+    border-radius: 10px;
     padding: 18px;
     overflow: hidden;
-    background:
-        linear-gradient(135deg, rgba(11, 18, 34, 0.86), rgba(20, 10, 26, 0.82));
+    background: rgba(10, 14, 26, 0.9);
     box-shadow:
         0 0 0 1px rgba(255, 47, 146, 0.04) inset,
         0 18px 32px rgba(0, 0, 0, 0.2);
 }
 
 .investment-row::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background:
-        linear-gradient(112deg, transparent 18%, rgba(68, 244, 255, 0.05) 44%, transparent 70%);
-    opacity: 0;
-    transition: opacity 0.18s ease;
-    pointer-events: none;
+    display: none;
 }
 
 .investment-row:hover::before {
     opacity: 1;
+}
+
+.investment-row::after {
+    display: none;
 }
 
 .investment-row-header {
@@ -1242,13 +1192,14 @@ body::after {
 
 .empty-investments {
     padding: 22px;
-    border: 1px dashed rgba(68, 244, 255, 0.22);
-    border-radius: 16px;
-    background:
-        linear-gradient(135deg, rgba(8, 14, 28, 0.8), rgba(18, 8, 28, 0.76));
+    border: 1px dashed rgba(68, 244, 255, 0.24);
+    border-radius: 10px;
+    background: rgba(8, 14, 28, 0.8);
     color: rgba(192, 236, 248, 0.72);
     font-weight: 700;
     text-align: center;
+    box-shadow:
+        inset 0 0 0 1px rgba(68, 244, 255, 0.03);
 }
 
 /* ========================= */
@@ -1411,11 +1362,11 @@ body::after {
 
     .panel-shell {
         padding: 18px;
-        border-radius: 18px;
+        border-radius: 0;
     }
 
     .panel-shell::after {
-        border-radius: 17px;
+        border-radius: 0;
     }
 
     .tab-row {
@@ -1433,10 +1384,6 @@ body::after {
         min-height: 360px;
         height: 360px;
         padding: 18px;
-        border-radius: 16px;
-    }
-
-    .settings-window::before {
         border-radius: 16px;
     }
 

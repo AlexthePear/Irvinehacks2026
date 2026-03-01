@@ -114,14 +114,28 @@
 .metric-card {
   position: relative;
   padding: 18px 18px 16px;
-  border: 1px solid rgba(68, 244, 255, 0.16);
-  border-radius: 20px;
+  border: 0;
+  border-radius: 0;
   overflow: hidden;
-  background:
-    linear-gradient(145deg, rgba(11, 19, 38, 0.9), rgba(8, 11, 24, 0.96) 55%, rgba(23, 8, 30, 0.92));
+  clip-path: polygon(
+    0 18px,
+    18px 0,
+    calc(100% - 62px) 0,
+    calc(100% - 44px) 8px,
+    calc(100% - 14px) 8px,
+    100% 24px,
+    100% calc(100% - 20px),
+    calc(100% - 20px) 100%,
+    60px 100%,
+    42px calc(100% - 8px),
+    14px calc(100% - 8px),
+    0 calc(100% - 24px)
+  );
+  background: rgba(9, 14, 26, 0.92);
   box-shadow:
     0 20px 34px rgba(0, 0, 0, 0.24),
-    0 0 0 1px rgba(255, 47, 146, 0.05) inset;
+    0 0 0 1px rgba(68, 244, 255, 0.08),
+    0 0 0 2px rgba(255, 47, 146, 0.02);
   transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
@@ -130,8 +144,15 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(112deg, transparent 22%, rgba(68, 244, 255, 0.08) 46%, transparent 72%);
-  opacity: 0;
+    linear-gradient(90deg, rgba(68, 244, 255, 0.86), rgba(68, 244, 255, 0.86)) 20px 0 / 40px 2px no-repeat,
+    linear-gradient(90deg, rgba(68, 244, 255, 0.86), rgba(68, 244, 255, 0.86)) 68px 0 / 14px 2px no-repeat,
+    linear-gradient(180deg, rgba(68, 244, 255, 0.82), rgba(68, 244, 255, 0.82)) 0 28px / 2px 48px no-repeat,
+    linear-gradient(90deg, rgba(255, 47, 146, 0.82), rgba(255, 47, 146, 0.82)) 24px calc(100% - 2px) / 34px 2px no-repeat,
+    linear-gradient(90deg, transparent 40%, rgba(255, 47, 146, 0.82) 40%, rgba(255, 47, 146, 0.82) 60%, transparent 60%) calc(100% - 88px) 8px / 56px 2px no-repeat,
+    linear-gradient(180deg, transparent 44%, rgba(255, 47, 146, 0.78) 44%, rgba(255, 47, 146, 0.78) 68%, transparent 68%) calc(100% - 2px) 32px / 2px 52px no-repeat,
+    linear-gradient(135deg, transparent 42%, rgba(68, 244, 255, 0.34) 47%, rgba(68, 244, 255, 0.34) 53%, transparent 58%) 8px 8px / 18px 18px no-repeat,
+    linear-gradient(-45deg, transparent 42%, rgba(255, 47, 146, 0.3) 47%, rgba(255, 47, 146, 0.3) 53%, transparent 58%) calc(100% - 26px) calc(100% - 26px) / 18px 18px no-repeat;
+  opacity: 0.9;
   transition: opacity 0.18s ease;
   pointer-events: none;
 }
@@ -140,22 +161,21 @@
   content: "";
   position: absolute;
   left: 18px;
-  right: 18px;
   top: 0;
+  width: 52px;
   height: 2px;
-  border-radius: 999px;
-  background:
-    linear-gradient(90deg, rgba(68, 244, 255, 0), rgba(68, 244, 255, 0.86), rgba(255, 47, 146, 0.76), rgba(255, 47, 146, 0));
-  opacity: 0.86;
+  border-radius: 0;
+  background: rgba(68, 244, 255, 0.9);
+  opacity: 0.9;
 }
 
 .metric-card:hover {
   transform: translateY(-3px);
-  border-color: rgba(68, 244, 255, 0.28);
   box-shadow:
-    0 0 22px rgba(68, 244, 255, 0.07),
+    0 0 18px rgba(68, 244, 255, 0.05),
     0 24px 38px rgba(0, 0, 0, 0.28),
-    0 0 0 1px rgba(255, 47, 146, 0.05) inset;
+    0 0 0 1px rgba(68, 244, 255, 0.1),
+    0 0 0 2px rgba(255, 47, 146, 0.03);
 }
 
 .metric-card:hover::before {
@@ -163,18 +183,26 @@
 }
 
 .metric-card:nth-child(2)::after {
-  background:
-    linear-gradient(90deg, rgba(255, 47, 146, 0), rgba(255, 47, 146, 0.86), rgba(68, 244, 255, 0.7), rgba(68, 244, 255, 0));
+  left: auto;
+  right: 18px;
+  width: 58px;
+  background: rgba(255, 47, 146, 0.9);
 }
 
 .metric-card:nth-child(3)::after {
-  background:
-    linear-gradient(90deg, rgba(255, 47, 146, 0), rgba(255, 47, 146, 0.84) 30%, rgba(68, 244, 255, 0.78) 74%, rgba(68, 244, 255, 0));
+  left: 50%;
+  right: auto;
+  width: 64px;
+  transform: translateX(-50%);
+  background: rgba(68, 244, 255, 0.88);
 }
 
 .metric-card:nth-child(4)::after {
-  background:
-    linear-gradient(90deg, rgba(68, 244, 255, 0), rgba(68, 244, 255, 0.82) 26%, rgba(255, 47, 146, 0.8) 70%, rgba(255, 47, 146, 0));
+  left: auto;
+  right: 18px;
+  width: 64px;
+  transform: none;
+  background: rgba(255, 47, 146, 0.88);
 }
 
 .metric-label {
