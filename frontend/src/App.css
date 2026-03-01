@@ -658,6 +658,13 @@ body::before {
     gap: 18px;
 }
 
+.investments-page {
+    width: min(1120px, 100%);
+    display: grid;
+    gap: 24px;
+    justify-items: center;
+}
+
 .investment-row {
     border: 1px solid rgba(0, 255, 240, 0.2);
     border-radius: 14px;
@@ -693,6 +700,23 @@ body::before {
     gap: 12px;
 }
 
+.investment-field {
+    align-content: start;
+}
+
+.investment-field label {
+    min-height: 2.55em;
+    display: flex;
+    align-items: flex-end;
+}
+
+.investment-field input,
+.investment-field select {
+    height: 44px;
+    min-height: 44px;
+    margin-bottom: 0;
+}
+
 .investment-chart-shell {
     margin-top: 24px;
 }
@@ -700,11 +724,14 @@ body::before {
 .investment-chart-wrapper {
     display: grid;
     gap: 12px;
+    width: 100%;
+    justify-items: center;
 }
 
 .chart-block {
     display: grid;
     gap: 12px;
+    width: min(1000px, 100%);
 }
 
 .chart-title {
@@ -774,6 +801,7 @@ body::before {
     display: flex;
     gap: 16px;
     flex-wrap: wrap;
+    justify-content: center;
 }
 
 .legend-item {
@@ -821,7 +849,7 @@ body::before {
 .chart-selector {
     display: grid;
     gap: 6px;
-    min-width: 220px;
+    min-width: 260px;
 }
 
 .chart-selector label {
@@ -833,6 +861,53 @@ body::before {
 
 .chart-selector select {
     margin-bottom: 0;
+    height: 44px;
+    border: 1px solid rgba(0, 255, 240, 0.35);
+    border-radius: 10px;
+    background:
+        linear-gradient(180deg, rgba(6, 14, 28, 0.96), rgba(7, 11, 22, 0.96));
+    color: #d8fcff;
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 0, 140, 0.08),
+        0 0 12px rgba(0, 255, 240, 0.08);
+    padding: 0 14px;
+    letter-spacing: 0.02em;
+}
+
+.chart-selector select:focus {
+    border-color: var(--form-focus-border-color);
+    box-shadow:
+        0 0 0 3px rgba(255, 0, 140, 0.14),
+        0 0 14px rgba(0, 255, 240, 0.16);
+}
+
+.chart-hover-line {
+    stroke: rgba(255, 255, 255, 0.45);
+    stroke-width: 1.2;
+    stroke-dasharray: 4 4;
+}
+
+.chart-hover-dot {
+    fill: #ffffff;
+    stroke: rgba(8, 14, 26, 0.95);
+    stroke-width: 1.4;
+}
+
+.chart-tooltip-bg {
+    fill: rgba(3, 8, 18, 0.95);
+    stroke: rgba(157, 253, 255, 0.35);
+    stroke-width: 1;
+}
+
+.chart-tooltip-text {
+    fill: #d9fbff;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+}
+
+.chart-tooltip-text-total {
+    fill: #ffe1ef;
+    font-weight: 600;
 }
 
 .empty-investments {

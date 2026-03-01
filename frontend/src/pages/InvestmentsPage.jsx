@@ -27,8 +27,14 @@ const toNumber = (value) => {
 };
 
 const roundTwo = (value) => Math.round((value + Number.EPSILON) * 100) / 100;
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const periodsPerYearFor = (cadence) => (cadence === "monthly" ? 12 : 26);
-const formatUsd = (value) => `$${roundTwo(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+const formatUsd = (value) =>
+  `$${roundTwo(value).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  })}`;
 
 const formatUsdTick = (value) => {
   const abs = Math.abs(value);
@@ -58,6 +64,19 @@ const niceMax = (value) => {
   return niceBase * 10 ** exponent;
 };
 
+const axisYTicks = (maxValue, count = 5) => {
+  const step = maxValue / count;
+  return Array.from({ length: count + 1 }, (_, idx) => roundTwo(idx * step));
+};
+
+const axisXTicks = (maxYears, count = 6) => {
+  const ticks = new Set([0, maxYears]);
+  for (let idx = 1; idx < count; idx += 1) {
+    ticks.add(Math.round((idx / count) * maxYears));
+  }
+  return Array.from(ticks).sort((a, b) => a - b);
+};
+
 const buildSingleProjection = (settings) => {
   const horizon = Math.max(1, Math.round(toNumber(settings.timeHorizon)));
   const startingAmount = Math.max(0, toNumber(settings.startingAmount));
@@ -82,27 +101,16 @@ const buildSingleProjection = (settings) => {
   return points;
 };
 
-const axisYTicks = (maxValue, count = 5) => {
-  const step = maxValue / count;
-  return Array.from({ length: count + 1 }, (_, idx) => roundTwo(idx * step));
-};
-
-const axisXTicks = (maxYears, count = 6) => {
-  const ticks = new Set([0, maxYears]);
-  for (let idx = 1; idx < count; idx += 1) {
-    ticks.add(Math.round((idx / count) * maxYears));
-  }
-  return Array.from(ticks).sort((a, b) => a - b);
-};
-
 function SingleAccountChart({ title, points }) {
+  const [hoverIndex, setHoverIndex] = useState(null);
+
   if (!points.length) {
     return null;
   }
 
   const width = 980;
   const height = 360;
-  const pad = { top: 24, right: 20, bottom: 54, left: 72 };
+  const pad = { top: 24, right: 20, bottom: 54, left: 96 };
   const chartWidth = width - pad.left - pad.right;
   const chartHeight = height - pad.top - pad.bottom;
   const maxYears = points[points.length - 1].year;
@@ -110,11 +118,13 @@ function SingleAccountChart({ title, points }) {
   const yTicks = axisYTicks(maxValue);
   const xTicks = axisXTicks(maxYears);
 
-  const xFor = (year) => pad.left + (year / maxYears) * chartWidth;
+  const xFor = (year) => pad.left + (year / Math.max(1, maxYears)) * chartWidth;
   const yFor = (value) => pad.top + chartHeight - (value / maxValue) * chartHeight;
   const baseY = pad.top + chartHeight;
 
-  const principalLine = points.map((point) => `${xFor(point.year)},${yFor(point.principal)}`).join(" ");
+  const principalLine = points
+    .map((point) => `${xFor(point.year)},${yFor(point.principal)}`)
+    .join(" ");
   const totalLine = points.map((point) => `${xFor(point.year)},${yFor(point.total)}`).join(" ");
 
   const principalArea = [
@@ -135,10 +145,35 @@ function SingleAccountChart({ title, points }) {
     "Z"
   ].join(" ");
 
+  const handleMouseMove = (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const svgX = ((event.clientX - rect.left) / rect.width) * width;
+    const relative = clamp((svgX - pad.left) / chartWidth, 0, 1);
+    const nearestIndex = Math.round(relative * maxYears);
+    setHoverIndex(clamp(nearestIndex, 0, maxYears));
+  };
+
+  const hoveredPoint = hoverIndex === null ? null : points[hoverIndex];
+  const tooltipWidth = 170;
+  const tooltipHeight = 58;
+  const tooltipX = hoveredPoint
+    ? clamp(xFor(hoveredPoint.year) + 10, pad.left + 8, pad.left + chartWidth - tooltipWidth - 8)
+    : 0;
+  const tooltipY = hoveredPoint
+    ? clamp(yFor(hoveredPoint.total) - 64, pad.top + 8, pad.top + chartHeight - tooltipHeight - 8)
+    : 0;
+
   return (
     <div className="chart-block">
       <h3 className="chart-title">{title}</h3>
-      <svg className="investment-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`${title} projection chart`}>
+      <svg
+        className="investment-chart"
+        viewBox={`0 0 ${width} ${height}`}
+        role="img"
+        aria-label={`${title} projection chart`}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => setHoverIndex(null)}
+      >
         <defs>
           <linearGradient id="principalFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="rgba(45, 247, 230, 0.55)" />
@@ -168,7 +203,11 @@ function SingleAccountChart({ title, points }) {
               y2={yFor(tick)}
               className="chart-grid-line"
             />
-            <text x={pad.left - 8} y={yFor(tick) + 4} className="chart-axis-tick chart-axis-tick-y">
+            <text
+              x={pad.left - 14}
+              y={yFor(tick) + 4}
+              className="chart-axis-tick chart-axis-tick-y"
+            >
               {formatUsdTick(tick)}
             </text>
           </g>
@@ -183,7 +222,12 @@ function SingleAccountChart({ title, points }) {
               y2={pad.top + chartHeight}
               className="chart-grid-line"
             />
-            <text x={xFor(tick)} y={pad.top + chartHeight + 20} textAnchor="middle" className="chart-axis-tick">
+            <text
+              x={xFor(tick)}
+              y={pad.top + chartHeight + 20}
+              textAnchor="middle"
+              className="chart-axis-tick"
+            >
               {tick}y
             </text>
           </g>
@@ -194,15 +238,52 @@ function SingleAccountChart({ title, points }) {
         <polyline points={principalLine} fill="none" className="investment-chart-principal-line" />
         <polyline points={totalLine} fill="none" className="investment-chart-line" />
 
-        <text x={pad.left + chartWidth / 2} y={height - 14} textAnchor="middle" className="chart-axis-title">
+        {hoveredPoint && (
+          <>
+            <line
+              x1={xFor(hoveredPoint.year)}
+              y1={pad.top}
+              x2={xFor(hoveredPoint.year)}
+              y2={pad.top + chartHeight}
+              className="chart-hover-line"
+            />
+            <circle
+              cx={xFor(hoveredPoint.year)}
+              cy={yFor(hoveredPoint.total)}
+              r="5"
+              className="chart-hover-dot"
+            />
+            <rect
+              x={tooltipX}
+              y={tooltipY}
+              width={tooltipWidth}
+              height={tooltipHeight}
+              rx="8"
+              className="chart-tooltip-bg"
+            />
+            <text x={tooltipX + 10} y={tooltipY + 20} className="chart-tooltip-text">
+              {`x: ${hoveredPoint.year} years`}
+            </text>
+            <text x={tooltipX + 10} y={tooltipY + 36} className="chart-tooltip-text">
+              {`y: ${formatUsd(hoveredPoint.total)} USD`}
+            </text>
+          </>
+        )}
+
+        <text
+          x={pad.left + chartWidth / 2}
+          y={height - 14}
+          textAnchor="middle"
+          className="chart-axis-title"
+        >
           Time (Years)
         </text>
         <text
-          x={20}
+          x={24}
           y={pad.top + chartHeight / 2}
           textAnchor="middle"
           className="chart-axis-title"
-          transform={`rotate(-90 20 ${pad.top + chartHeight / 2})`}
+          transform={`rotate(-90 24 ${pad.top + chartHeight / 2})`}
         >
           Portfolio Value (USD)
         </text>
@@ -216,13 +297,15 @@ function SingleAccountChart({ title, points }) {
 }
 
 function MasterChart({ accountSeries, totalSeries, maxYears }) {
+  const [hoverYear, setHoverYear] = useState(null);
+
   if (!accountSeries.length) {
     return null;
   }
 
   const width = 980;
   const height = 360;
-  const pad = { top: 24, right: 20, bottom: 54, left: 72 };
+  const pad = { top: 24, right: 20, bottom: 54, left: 96 };
   const chartWidth = width - pad.left - pad.right;
   const chartHeight = height - pad.top - pad.bottom;
   const maxSeriesValue = Math.max(
@@ -233,13 +316,55 @@ function MasterChart({ accountSeries, totalSeries, maxYears }) {
   const yTicks = axisYTicks(maxValue);
   const xTicks = axisXTicks(maxYears);
 
-  const xFor = (year) => pad.left + (year / maxYears) * chartWidth;
+  const xFor = (year) => pad.left + (year / Math.max(1, maxYears)) * chartWidth;
   const yFor = (value) => pad.top + chartHeight - (value / maxValue) * chartHeight;
+
+  const handleMouseMove = (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const svgX = ((event.clientX - rect.left) / rect.width) * width;
+    const relative = clamp((svgX - pad.left) / chartWidth, 0, 1);
+    const nearestYear = Math.round(relative * maxYears);
+    setHoverYear(clamp(nearestYear, 0, maxYears));
+  };
+
+  const hoveredTotal = hoverYear === null ? null : totalSeries[hoverYear];
+  const hoverSeriesValues =
+    hoverYear === null
+      ? []
+      : accountSeries.map((series) => ({
+          label: series.label,
+          color: series.color,
+          value: series.points[hoverYear].total
+        }));
+  const tooltipLines =
+    hoveredTotal === null
+      ? []
+      : [
+          `x: ${hoveredTotal.year} years`,
+          `Total: ${formatUsd(hoveredTotal.total)}`
+        ].concat(hoverSeriesValues.map((entry) => `${entry.label}: ${formatUsd(entry.value)}`));
+  const tooltipWidth = 250;
+  const tooltipHeight = tooltipLines.length * 14 + 12;
+  const tooltipX =
+    hoveredTotal === null
+      ? 0
+      : clamp(xFor(hoveredTotal.year) + 10, pad.left + 8, pad.left + chartWidth - tooltipWidth - 8);
+  const tooltipY =
+    hoveredTotal === null
+      ? 0
+      : clamp(yFor(hoveredTotal.total) - tooltipHeight - 10, pad.top + 8, pad.top + chartHeight - tooltipHeight - 8);
 
   return (
     <div className="chart-block">
       <h3 className="chart-title">Master Projection (All Accounts)</h3>
-      <svg className="investment-chart" viewBox={`0 0 ${width} ${height}`} role="img" aria-label="Master account projection chart">
+      <svg
+        className="investment-chart"
+        viewBox={`0 0 ${width} ${height}`}
+        role="img"
+        aria-label="Master account projection chart"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => setHoverYear(null)}
+      >
         <rect
           x={pad.left}
           y={pad.top}
@@ -258,7 +383,11 @@ function MasterChart({ accountSeries, totalSeries, maxYears }) {
               y2={yFor(tick)}
               className="chart-grid-line"
             />
-            <text x={pad.left - 8} y={yFor(tick) + 4} className="chart-axis-tick chart-axis-tick-y">
+            <text
+              x={pad.left - 14}
+              y={yFor(tick) + 4}
+              className="chart-axis-tick chart-axis-tick-y"
+            >
               {formatUsdTick(tick)}
             </text>
           </g>
@@ -273,7 +402,12 @@ function MasterChart({ accountSeries, totalSeries, maxYears }) {
               y2={pad.top + chartHeight}
               className="chart-grid-line"
             />
-            <text x={xFor(tick)} y={pad.top + chartHeight + 20} textAnchor="middle" className="chart-axis-tick">
+            <text
+              x={xFor(tick)}
+              y={pad.top + chartHeight + 20}
+              textAnchor="middle"
+              className="chart-axis-tick"
+            >
               {tick}y
             </text>
           </g>
@@ -282,7 +416,9 @@ function MasterChart({ accountSeries, totalSeries, maxYears }) {
         {accountSeries.map((series) => (
           <polyline
             key={series.id}
-            points={series.points.map((point) => `${xFor(point.year)},${yFor(point.total)}`).join(" ")}
+            points={series.points
+              .map((point) => `${xFor(point.year)},${yFor(point.total)}`)
+              .join(" ")}
             fill="none"
             stroke={series.color}
             strokeWidth="2.1"
@@ -291,20 +427,72 @@ function MasterChart({ accountSeries, totalSeries, maxYears }) {
         ))}
 
         <polyline
-          points={totalSeries.map((point) => `${xFor(point.year)},${yFor(point.total)}`).join(" ")}
+          points={totalSeries
+            .map((point) => `${xFor(point.year)},${yFor(point.total)}`)
+            .join(" ")}
           fill="none"
           className="master-line-total"
         />
 
-        <text x={pad.left + chartWidth / 2} y={height - 14} textAnchor="middle" className="chart-axis-title">
+        {hoveredTotal && (
+          <>
+            <line
+              x1={xFor(hoveredTotal.year)}
+              y1={pad.top}
+              x2={xFor(hoveredTotal.year)}
+              y2={pad.top + chartHeight}
+              className="chart-hover-line"
+            />
+            {hoverSeriesValues.map((entry, idx) => (
+              <circle
+                key={`hover-dot-${entry.label}`}
+                cx={xFor(hoveredTotal.year)}
+                cy={yFor(accountSeries[idx].points[hoveredTotal.year].total)}
+                r="3"
+                fill={entry.color}
+              />
+            ))}
+            <circle
+              cx={xFor(hoveredTotal.year)}
+              cy={yFor(hoveredTotal.total)}
+              r="5"
+              className="chart-hover-dot"
+            />
+            <rect
+              x={tooltipX}
+              y={tooltipY}
+              width={tooltipWidth}
+              height={tooltipHeight}
+              rx="8"
+              className="chart-tooltip-bg"
+            />
+            {tooltipLines.map((line, idx) => (
+              <text
+                key={`tip-${line}`}
+                x={tooltipX + 10}
+                y={tooltipY + 20 + idx * 14}
+                className={`chart-tooltip-text ${idx === 1 ? "chart-tooltip-text-total" : ""}`}
+              >
+                {line}
+              </text>
+            ))}
+          </>
+        )}
+
+        <text
+          x={pad.left + chartWidth / 2}
+          y={height - 14}
+          textAnchor="middle"
+          className="chart-axis-title"
+        >
           Time (Years)
         </text>
         <text
-          x={20}
+          x={24}
           y={pad.top + chartHeight / 2}
           textAnchor="middle"
           className="chart-axis-title"
-          transform={`rotate(-90 20 ${pad.top + chartHeight / 2})`}
+          transform={`rotate(-90 24 ${pad.top + chartHeight / 2})`}
         >
           Portfolio Value (USD)
         </text>
@@ -346,10 +534,6 @@ function InvestmentsPage({ savings, isMonthly }) {
 
     (savings?.CustomAccounts || []).forEach((acct, idx) => {
       const rawAmount = toNumber(acct?.amount);
-      if (rawAmount <= 0) {
-        return;
-      }
-
       const monthlyContribution = isMonthly ? rawAmount : rawAmount / 12;
       derived.push({
         id: `custom-${idx}`,
@@ -358,7 +542,10 @@ function InvestmentsPage({ savings, isMonthly }) {
       });
     });
 
-    return derived.map((account, idx) => ({ ...account, color: accountColors[idx % accountColors.length] }));
+    return derived.map((account, idx) => ({
+      ...account,
+      color: accountColors[idx % accountColors.length]
+    }));
   }, [isMonthly, savings]);
 
   const [accountSettings, setAccountSettings] = useState({});
@@ -429,8 +616,11 @@ function InvestmentsPage({ savings, isMonthly }) {
     return next;
   }, [accountSettings, accounts]);
 
-  const selectedAccount = accounts.find((account) => account.id === selectedAccountId) || null;
-  const selectedPoints = selectedAccount ? projectionsByAccount[selectedAccount.id] || [] : [];
+  const selectedAccount =
+    accounts.find((account) => account.id === selectedAccountId) || null;
+  const selectedPoints = selectedAccount
+    ? projectionsByAccount[selectedAccount.id] || []
+    : [];
 
   const masterProjection = useMemo(() => {
     if (!accounts.length) {
@@ -440,12 +630,20 @@ function InvestmentsPage({ savings, isMonthly }) {
     const accountSeries = accounts.map((account) => {
       const rawPoints = projectionsByAccount[account.id] || [];
       const lastPoint = rawPoints[rawPoints.length - 1] || { year: 0, total: 0 };
-      return { id: account.id, label: account.label, color: account.color, rawPoints, lastPoint };
+      return {
+        id: account.id,
+        label: account.label,
+        color: account.color,
+        rawPoints,
+        lastPoint
+      };
     });
 
     const maxYears = Math.max(
       1,
-      ...accountSeries.map((series) => series.rawPoints[series.rawPoints.length - 1]?.year || 1)
+      ...accountSeries.map(
+        (series) => series.rawPoints[series.rawPoints.length - 1]?.year || 1
+      )
     );
 
     const normalized = accountSeries.map((series) => {
@@ -457,12 +655,20 @@ function InvestmentsPage({ savings, isMonthly }) {
           points.push({ year, total: series.lastPoint.total });
         }
       }
-      return { id: series.id, label: series.label, color: series.color, points };
+      return {
+        id: series.id,
+        label: series.label,
+        color: series.color,
+        points
+      };
     });
 
     const totalSeries = [];
     for (let year = 0; year <= maxYears; year += 1) {
-      const total = normalized.reduce((sum, series) => sum + series.points[year].total, 0);
+      const total = normalized.reduce(
+        (sum, series) => sum + series.points[year].total,
+        0
+      );
       totalSeries.push({ year, total });
     }
 
@@ -470,12 +676,19 @@ function InvestmentsPage({ savings, isMonthly }) {
   }, [accounts, projectionsByAccount]);
 
   return (
-    <div id="investments-page" role="tabpanel" aria-label="Investments">
+    <div
+      id="investments-page"
+      className="investments-page"
+      role="tabpanel"
+      aria-label="Investments"
+    >
       <div className="panel-shell">
         <div className="page-header">
           <div>
             <p className="page-kicker">Investments</p>
-            <h2 className="page-title">Forecast by account using your budgeting contributions.</h2>
+            <h2 className="page-title">
+              Forecast by account using your budgeting contributions.
+            </h2>
           </div>
           <div className="page-badge">Forecast</div>
         </div>
@@ -497,49 +710,74 @@ function InvestmentsPage({ savings, isMonthly }) {
                   <div className="investment-row" key={account.id}>
                     <div className="investment-row-header">
                       <h3>{account.label}</h3>
-                      <span>Budget monthly contribution: {formatUsd(account.monthlyContribution)} USD</span>
+                      <span>
+                        Budget monthly contribution:{" "}
+                        {formatUsd(account.monthlyContribution)} USD
+                      </span>
                     </div>
 
                     <div className="investment-row-grid">
-                      <div className="settings-field">
-                        <label htmlFor={`${account.id}-horizon`}>Time horizon (years)</label>
+                      <div className="settings-field investment-field">
+                        <label htmlFor={`${account.id}-horizon`}>
+                          Time horizon (years)
+                        </label>
                         <input
                           id={`${account.id}-horizon`}
                           type="number"
                           min="1"
                           value={settings.timeHorizon}
-                          onChange={(event) => updateSetting(account.id, "timeHorizon", event.target.value)}
+                          onChange={(event) =>
+                            updateSetting(
+                              account.id,
+                              "timeHorizon",
+                              event.target.value
+                            )
+                          }
                         />
                       </div>
 
-                      <div className="settings-field">
-                        <label htmlFor={`${account.id}-starting`}>Starting amount (USD)</label>
+                      <div className="settings-field investment-field">
+                        <label htmlFor={`${account.id}-starting`}>
+                          Starting amount
+                        </label>
                         <input
                           id={`${account.id}-starting`}
                           type="number"
                           min="0"
                           step="0.01"
                           value={settings.startingAmount}
-                          onChange={(event) => updateSetting(account.id, "startingAmount", event.target.value)}
-                          onBlur={() => normalizeMoneyField(account.id, "startingAmount")}
+                          onChange={(event) =>
+                            updateSetting(
+                              account.id,
+                              "startingAmount",
+                              event.target.value
+                            )
+                          }
+                          onBlur={() =>
+                            normalizeMoneyField(account.id, "startingAmount")
+                          }
                         />
                       </div>
 
-                      <div className="settings-field">
-                        <label htmlFor={`${account.id}-rate`}>Estimated return rate (%)</label>
+                      <div className="settings-field investment-field">
+                        <label htmlFor={`${account.id}-rate`}>
+                          Estimated return rate (%)
+                        </label>
                         <input
                           id={`${account.id}-rate`}
                           type="number"
                           min="0"
                           step="0.1"
                           value={settings.returnRate}
-                          onChange={(event) => updateSetting(account.id, "returnRate", event.target.value)}
+                          onChange={(event) =>
+                            updateSetting(account.id, "returnRate", event.target.value)
+                          }
                         />
                       </div>
 
-                      <div className="settings-field">
+                      <div className="settings-field investment-field">
                         <label htmlFor={`${account.id}-contrib`}>
-                          Additional contribution amount (USD / {settings.contributionCadence})
+                          Additional contribution amount
                         </label>
                         <input
                           id={`${account.id}-contrib`}
@@ -547,17 +785,36 @@ function InvestmentsPage({ savings, isMonthly }) {
                           min="0"
                           step="0.01"
                           value={settings.additionalContribution}
-                          onChange={(event) => updateSetting(account.id, "additionalContribution", event.target.value)}
-                          onBlur={() => normalizeMoneyField(account.id, "additionalContribution")}
+                          onChange={(event) =>
+                            updateSetting(
+                              account.id,
+                              "additionalContribution",
+                              event.target.value
+                            )
+                          }
+                          onBlur={() =>
+                            normalizeMoneyField(
+                              account.id,
+                              "additionalContribution"
+                            )
+                          }
                         />
                       </div>
 
-                      <div className="settings-field">
-                        <label htmlFor={`${account.id}-cadence`}>Contribution cadence</label>
+                      <div className="settings-field investment-field">
+                        <label htmlFor={`${account.id}-cadence`}>
+                          Contribution cadence
+                        </label>
                         <select
                           id={`${account.id}-cadence`}
                           value={settings.contributionCadence}
-                          onChange={(event) => updateSetting(account.id, "contributionCadence", event.target.value)}
+                          onChange={(event) =>
+                            updateSetting(
+                              account.id,
+                              "contributionCadence",
+                              event.target.value
+                            )
+                          }
                         >
                           <option value="biweekly">Biweekly</option>
                           <option value="monthly">Monthly</option>
@@ -576,7 +833,9 @@ function InvestmentsPage({ savings, isMonthly }) {
         <div className="page-header">
           <div>
             <p className="page-kicker">Account Chart</p>
-            <h2 className="page-title">Principal and interest for a selected account.</h2>
+            <h2 className="page-title">
+              Principal and interest for a selected account.
+            </h2>
           </div>
           {!!accounts.length && (
             <div className="chart-selector">
@@ -600,7 +859,10 @@ function InvestmentsPage({ savings, isMonthly }) {
           {!selectedAccount ? (
             <div className="empty-investments">No account data to display.</div>
           ) : (
-            <SingleAccountChart title={`${selectedAccount.label} Forecast`} points={selectedPoints} />
+            <SingleAccountChart
+              title={`${selectedAccount.label} Forecast`}
+              points={selectedPoints}
+            />
           )}
         </div>
       </div>
@@ -609,7 +871,9 @@ function InvestmentsPage({ savings, isMonthly }) {
         <div className="page-header">
           <div>
             <p className="page-kicker">Master Chart</p>
-            <h2 className="page-title">Aggregated account projection and combined total.</h2>
+            <h2 className="page-title">
+              Aggregated account projection and combined total.
+            </h2>
           </div>
         </div>
 
