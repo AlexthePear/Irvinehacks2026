@@ -5,8 +5,6 @@ const baseAccounts = [
   { key: "IRA", label: "IRA" },
   { key: "HSA", label: "HSA" },
   { key: "Back Door", label: "Back Door IRA" },
-  { key: "Roth 401k", label: "Roth 401k" },
-  { key: "Roth IRA", label: "Roth IRA" },
   { key: "529", label: "529" }
 ];
 
@@ -525,9 +523,15 @@ function InvestmentsPage({ savings, isMonthly }) {
       }
 
       const monthlyContribution = isMonthly ? rawAmount : rawAmount / 12;
+      const derivedLabel =
+        account.key === "401k" && savings?.["401k Is Roth"]
+          ? "Roth 401k"
+          : account.key === "IRA" && savings?.["IRA Is Roth"]
+            ? "Roth IRA"
+            : account.label;
       derived.push({
         id: account.key,
-        label: account.label,
+        label: derivedLabel,
         monthlyContribution: roundTwo(monthlyContribution)
       });
     });
