@@ -1,12 +1,18 @@
 {
+  "career": {
+    "Company": "",
+    "Job Title": "",
+    "Level": "",
+    "Years of Experience": ""
+  },
   "comp": {
-    "Base Pay": "",
+    "Base Pay": "34325252",
     "Bonus": "",
     "Filing Status": "",
     "Include RSU in Gross Income": false,
     "Location (State)": "",
     "Misc": "",
-    "RSU": ""
+    "RSU": "500"
   },
   "expenses": {
     "Debt Payments": "",
@@ -14,12 +20,7 @@
     "Healthcare": "",
     "Housing": "",
     "Insurances": "",
-    "Subscriptions": [
-      {
-        "amount": "",
-        "name": ""
-      }
-    ],
+    "Subscriptions": [],
     "Transportation": "",
     "Utilities": ""
   },
@@ -36,7 +37,12 @@
   "wants": {
     "Dining": "",
     "Entertainment": "",
-    "Hobbies": [],
+    "Hobbies": [
+      {
+        "amount": "",
+        "name": ""
+      }
+    ],
     "Travel": ""
   }
 }

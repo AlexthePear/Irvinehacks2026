@@ -92,3 +92,8 @@ func (a *App) CalcFicaTax(income float64) float64 {
 
 	return socialSecurity + medicare
 }
+
+// GenerateInsights reads output.json, sends it to Gemini with the provided prompt, and returns the model response.
+func (a *App) GenerateInsights(prompt string) (string, error) {
+	return generate_insights("output.json", prompt)
+}

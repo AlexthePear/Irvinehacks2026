@@ -13,6 +13,14 @@ import (
 var assets embed.FS
 
 func main() {
+	// res_ai, error_ai := generate_insights("output.json", "")
+
+	// if error_ai != nil{
+	// 	println("error: ", error_ai)
+	// 	return
+	// }
+	// println(res_ai)
+	
 
 	res, error := StateTaxOwed(30000, "california", "single")
 	res_fed, _ := FederalTaxOwed(30000, "single")
@@ -26,6 +34,13 @@ func main() {
 
 	// Create an instance of the app structure
 	app := NewApp()
+
+	fmt.Println("About to start Wails...")
+	errRun := wails.Run(&options.App{ /* ... */ })
+	fmt.Println("Wails.Run returned")
+	if errRun != nil {
+		fmt.Println("Error:", errRun)
+	}
 
 	// Create application with options
 	err := wails.Run(&options.App{
