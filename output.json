@@ -6,68 +6,69 @@
     "Years of Experience": "1"
   },
   "comp": {
-    "Base Pay": "11958.33",
-    "Bonus": "1250",
+    "Base Pay": "143499.96",
+    "Bonus": "15000",
     "Filing Status": "Single",
     "Include RSU in Gross Income": false,
-    "Input Period": "monthly",
+    "Input Period": "annual",
     "Location (State)": "california",
     "Misc": "0",
-    "RSU": "4166.67"
+    "RSU": "50000.04"
   },
   "expenses": {
     "Debt Payments": "0",
-    "Groceries": "300",
-    "Healthcare": "100",
-    "Housing": "3000",
-    "Insurances": "100",
+    "Groceries": "3600",
+    "Healthcare": "1200",
+    "Housing": "36000",
+    "Insurances": "1200",
     "Subscriptions": [
       {
-        "amount": "20",
+        "amount": "240",
         "name": "ChatGPT"
       },
       {
-        "amount": "17",
+        "amount": "204",
         "name": "Spotify"
       },
       {
-        "amount": "15",
+        "amount": "180",
         "name": "Planet Fitness"
       },
       {
-        "amount": "100",
+        "amount": "1200",
         "name": "Movement"
       }
     ],
-    "Transportation": "100",
-    "Utilities": "100"
+    "Transportation": "1200",
+    "Utilities": "1200"
   },
   "meta": {
-    "inputPeriod": "monthly"
+    "inputPeriod": "annual"
   },
   "savings": {
-    "401k": "2041.67",
+    "401k": "24500.04",
+    "401k Company Match": "2499.96",
     "401k Is Roth": false,
-    "529": "500",
-    "Back Door": "0",
+    "529": "6000",
+    "Back Door": "1200",
     "CustomAccounts": [
       {
-        "amount": "1000",
+        "amount": "12000",
         "name": "Brokerage"
       }
     ],
-    "HSA": "266.67",
-    "IRA": "625",
+    "HSA": "3200.04",
+    "IRA": "7500",
     "IRA Is Roth": true,
     "Roth 401k": "",
     "Roth IRA": "625"
   },
   "wants": {
-    "Dining": "1000",
-    "Entertainment": "100",
+    "Dining": "12000",
+    "Entertainment": "1200",
     "Hobbies": [
       {
-        "amount": "50",
+        "amount": "600",
         "name": "Skiing"
       },
       {
@@ -75,6 +76,6 @@
         "name": ""
       }
     ],
-    "Travel": "500"
+    "Travel": "6000"
   }
 }
