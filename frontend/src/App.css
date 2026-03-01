@@ -3,6 +3,7 @@
 /* ========================= */
 
 :root {
+    --content-max-width: 1120px;
     --form-border-color: rgba(0, 255, 240, 0.28);
     --form-focus-border-color: rgba(255, 0, 140, 0.65);
 }
@@ -119,7 +120,7 @@ body::before {
 .panel-shell {
     position: relative;
     z-index: 1;
-    width: min(1120px, 100%);
+    width: min(var(--content-max-width), 100%);
     padding: 28px;
     box-sizing: border-box;
     border: 1px solid rgba(0, 255, 240, 0.35);
