@@ -10,6 +10,7 @@
     "Bonus": "1250.04",
     "Filing Status": "Single",
     "Include RSU in Gross Income": true,
+    "Input Period": "annual",
     "Location (State)": "california",
     "Misc": "0",
     "RSU": "4166.64"
@@ -43,6 +44,7 @@
   },
   "savings": {
     "401k": "2041.68",
+    "401k Is Roth": false,
     "529": "833.28",
     "Back Door": "0",
     "CustomAccounts": [
