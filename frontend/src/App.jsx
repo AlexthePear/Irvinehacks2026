@@ -97,6 +97,99 @@ const formatInsightText = (text) =>
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 
+const escapeHtml = (value) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+const formatInlineMarkdown = (text) => {
+  let html = escapeHtml(text);
+
+  html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+  html = html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  html = html.replace(/__([^_]+)__/g, "<strong>$1</strong>");
+  html = html.replace(/(^|[^\*])\*([^\*]+)\*(?!\*)/g, "$1<em>$2</em>");
+  html = html.replace(/(^|[^_])_([^_]+)_(?!_)/g, "$1<em>$2</em>");
+
+  return html;
+};
+
+const renderMarkdownToHtml = (markdown) => {
+  const lines = formatInsightText(markdown).split("\n");
+  const blocks = [];
+  let paragraphLines = [];
+  let listItems = [];
+  let listType = null;
+
+  const flushParagraph = () => {
+    if (!paragraphLines.length) {
+      return;
+    }
+    blocks.push(`<p>${formatInlineMarkdown(paragraphLines.join(" "))}</p>`);
+    paragraphLines = [];
+  };
+
+  const flushList = () => {
+    if (!listItems.length || !listType) {
+      return;
+    }
+    const items = listItems.map((item) => `<li>${formatInlineMarkdown(item)}</li>`).join("");
+    blocks.push(`<${listType}>${items}</${listType}>`);
+    listItems = [];
+    listType = null;
+  };
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    if (!trimmed) {
+      flushParagraph();
+      flushList();
+      continue;
+    }
+
+    const headingMatch = trimmed.match(/^(#{1,6})\s+(.*)$/);
+    if (headingMatch) {
+      flushParagraph();
+      flushList();
+      const level = headingMatch[1].length;
+      blocks.push(`<h${level}>${formatInlineMarkdown(headingMatch[2])}</h${level}>`);
+      continue;
+    }
+
+    const bulletMatch = trimmed.match(/^[-*]\s+(.*)$/);
+    if (bulletMatch) {
+      flushParagraph();
+      if (listType && listType !== "ul") {
+        flushList();
+      }
+      listType = "ul";
+      listItems.push(bulletMatch[1]);
+      continue;
+    }
+
+    const numberedMatch = trimmed.match(/^\d+\.\s+(.*)$/);
+    if (numberedMatch) {
+      flushParagraph();
+      if (listType && listType !== "ol") {
+        flushList();
+      }
+      listType = "ol";
+      listItems.push(numberedMatch[1]);
+      continue;
+    }
+
+    flushList();
+    paragraphLines.push(trimmed);
+  }
+
+  flushParagraph();
+  flushList();
+
+  return blocks.join("");
+};
+
 function App() {
   const [activeTab, setActiveTab] = useState(tabs[0].id);
   const [values, setValues] = useState(initialState);
@@ -337,6 +430,7 @@ function App() {
     fica: taxDetails.fica / displayDivisor,
     total: taxDetails.total / displayDivisor
   };
+  const aiResponseHtml = aiResponse ? renderMarkdownToHtml(aiResponse) : "";
 
   useEffect(() => {
     const filingStatus = values.comp["Filing Status"] || "single";
@@ -677,7 +771,16 @@ function App() {
           </div>
         ) : (
           <div className="ai-response-content">
-            {aiError || aiResponse || "Your AI insight summary will appear here."}
+            {aiError ? (
+              aiError
+            ) : aiResponseHtml ? (
+              <div
+                className="ai-markdown-content"
+                dangerouslySetInnerHTML={{ __html: aiResponseHtml }}
+              />
+            ) : (
+              "Your AI insight summary will appear here."
+            )}
           </div>
         )}
       </div>
