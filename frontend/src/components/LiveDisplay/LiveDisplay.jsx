@@ -18,6 +18,7 @@ function LiveDisplay({
   afterTaxAdvantaged,
   afterTaxCustom,
   takeHomePay,
+  spendingBreakdown,
   taxDetails
 }) {
   const [showMore, setShowMore] = useState(false);
@@ -75,6 +76,9 @@ function LiveDisplay({
           <p className="metric-sub negative">
             Paid ${fmt(taxDetails?.total || 0)} in taxes
           </p>
+          <p className="metric-sub negative">
+            Personal Expenditures: ${fmt(spendingBreakdown?.personalExpenditures || 0)}
+          </p>
           <button
             type="button"
             className="show-more-button"
@@ -95,6 +99,22 @@ function LiveDisplay({
               <div className="tax-row">
                 <span>FICA</span>
                 <span>${fmt(taxDetails?.fica || 0)}</span>
+              </div>
+              <div className="tax-row tax-section-label">
+                <span>Spending</span>
+                <span></span>
+              </div>
+              <div className="tax-row">
+                <span>After-tax investments</span>
+                <span>${fmt(spendingBreakdown?.afterTaxInvestments || 0)}</span>
+              </div>
+              <div className="tax-row">
+                <span>Wants</span>
+                <span>${fmt(spendingBreakdown?.wants || 0)}</span>
+              </div>
+              <div className="tax-row">
+                <span>Needs</span>
+                <span>${fmt(spendingBreakdown?.needs || 0)}</span>
               </div>
             </div>
           )}

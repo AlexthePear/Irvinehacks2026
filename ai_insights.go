@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-const geminiEndpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent"
+const geminiEndpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
 
 // generate_insights reads the JSON file, combines it with the prompt, and returns Gemini's response text.
 func generate_insights(outputFilePath string, prompt string) (string, error) {

@@ -32,8 +32,6 @@ const tabFields = {
     "IRA",
     "HSA",
     "Back Door",
-    "Roth 401k",
-    "Roth IRA",
     "529",
     { label: "Custom Accounts", dynamicSavings: true }
   ],
@@ -44,14 +42,17 @@ const tabFields = {
     "Transportation",
     "Healthcare",
     "Debt Payments",
-    "Insurances"
+    "Insurances",
+    { label: "Subscriptions", dynamicExpenses: true }
   ],
-  wants: ["Dining", "Entertainment", "Travel", { label: "Hobbies", dynamic: true }, 
-    { label: "Subscriptions", dynamicExpenses: true }],
+  wants: ["Dining", "Entertainment", "Travel", { label: "Hobbies", dynamic: true }],
   career: ["Job Title", "Company", "Level", "Years of Experience"]
 };
 
 const initialState = {
+  meta: {
+    inputPeriod: "annual"
+  },
   comp: {
     "Base Pay": "",
     Bonus: "",
@@ -66,10 +67,9 @@ const initialState = {
     "401k": "",
     "401k Is Roth": false,
     IRA: "",
+    "IRA Is Roth": false,
     HSA: "",
     "Back Door": "",
-    "Roth 401k": "",
-    "Roth IRA": "",
     "529": "",
     CustomAccounts: []
   },
@@ -119,21 +119,31 @@ const normalizeLoadedState = (loaded) => {
   const expenses = loaded.expenses || {};
   const wants = loaded.wants || {};
   const career = loaded.career || {};
+  const meta = loaded.meta || {};
+  const loadedPeriod =
+    meta.inputPeriod === "monthly" || meta.inputPeriod === "annual"
+      ? meta.inputPeriod
+      : comp["Input Period"] === "monthly" || comp["Input Period"] === "annual"
+        ? comp["Input Period"]
+        : "annual";
 
   return {
+    meta: {
+      ...initialState.meta,
+      ...meta,
+      inputPeriod: loadedPeriod
+    },
     comp: {
       ...initialState.comp,
       ...comp,
       "Include RSU in Gross Income": Boolean(comp["Include RSU in Gross Income"]),
-      "Input Period":
-        comp["Input Period"] === "monthly" || comp["Input Period"] === "annual"
-          ? comp["Input Period"]
-          : "annual"
+      "Input Period": loadedPeriod
     },
     savings: {
       ...initialState.savings,
       ...savings,
       "401k Is Roth": Boolean(savings["401k Is Roth"]),
+      "IRA Is Roth": Boolean(savings["IRA Is Roth"]),
       CustomAccounts: Array.isArray(savings.CustomAccounts) ? savings.CustomAccounts : []
     },
     expenses: {
@@ -267,9 +277,21 @@ function App() {
   const annualMultiplier = isMonthly ? 12 : 1;
   const displayDivisor = isMonthly ? 12 : 1;
 
-  const persistValues = async (payload) => {
+  const persistValues = async (payload, periodOverride) => {
+    const inputPeriod = periodOverride || (isMonthly ? "monthly" : "annual");
+    const payloadWithPeriod = {
+      ...payload,
+      meta: {
+        ...(payload.meta || {}),
+        inputPeriod
+      },
+      comp: {
+        ...(payload.comp || {}),
+        "Input Period": inputPeriod
+      }
+    };
     try {
-      await WriteToJson(payload);
+      await WriteToJson(payloadWithPeriod);
     } catch (err) {
       console.error("Failed to write JSON", err);
     }
@@ -287,7 +309,7 @@ function App() {
         const normalized = normalizeLoadedState(loaded);
         setValues(normalized);
         setDraftValues(normalized);
-        setIsMonthly(normalized.comp["Input Period"] === "monthly");
+        setIsMonthly(normalized.meta.inputPeriod === "monthly");
       } catch (err) {
         console.error("Failed to load output.json", err);
       }
@@ -379,6 +401,21 @@ function App() {
     });
   };
 
+  const commitIraIsRoth = (checked) => {
+    setDraftValues((prev) => ({
+      ...prev,
+      savings: { ...prev.savings, "IRA Is Roth": checked }
+    }));
+    setValues((prev) => {
+      const next = {
+        ...prev,
+        savings: { ...prev.savings, "IRA Is Roth": checked }
+      };
+      persistValues(next);
+      return next;
+    });
+  };
+
   const commitDynamicItem = (tab, key, index) => {
     setValues((prev) => {
       const updated = [...prev[tab][key]];
@@ -461,8 +498,6 @@ function App() {
       IRA: scaleNumericString(state.savings.IRA, ratio),
       HSA: scaleNumericString(state.savings.HSA, ratio),
       "Back Door": scaleNumericString(state.savings["Back Door"], ratio),
-      "Roth 401k": scaleNumericString(state.savings["Roth 401k"], ratio),
-      "Roth IRA": scaleNumericString(state.savings["Roth IRA"], ratio),
       "529": scaleNumericString(state.savings["529"], ratio),
       CustomAccounts: state.savings.CustomAccounts.map((acct) => ({
         ...acct,
@@ -502,13 +537,18 @@ function App() {
       const scaledDraft = scaleStateByRatio(prev, ratio);
       return {
         ...scaledDraft,
+        meta: { ...(scaledDraft.meta || {}), inputPeriod: nextPeriod },
         comp: { ...scaledDraft.comp, "Input Period": nextPeriod }
       };
     });
     setValues((prev) => {
       const scaled = scaleStateByRatio(prev, ratio);
-      const next = { ...scaled, comp: { ...scaled.comp, "Input Period": nextPeriod } };
-      persistValues(next);
+      const next = {
+        ...scaled,
+        meta: { ...(scaled.meta || {}), inputPeriod: nextPeriod },
+        comp: { ...scaled.comp, "Input Period": nextPeriod }
+      };
+      persistValues(next, nextPeriod);
       return next;
     });
     setIsMonthly((prev) => !prev);
@@ -528,15 +568,19 @@ function App() {
     (values.comp["Include RSU in Gross Income"] ? toNumber(values.comp.RSU) : 0) +
     toNumber(values.comp.Misc);
 
+  const roth401kAmount = values.savings["401k Is Roth"] ? toNumber(values.savings["401k"]) : 0;
+  const traditional401kAmount = values.savings["401k Is Roth"] ? 0 : toNumber(values.savings["401k"]);
+  const rothIraAmount = values.savings["IRA Is Roth"] ? toNumber(values.savings.IRA) : 0;
+  const traditionalIraAmount = values.savings["IRA Is Roth"] ? 0 : toNumber(values.savings.IRA);
+
   const pretaxContrib =
-    (values.savings["401k Is Roth"] ? 0 : toNumber(values.savings["401k"])) +
-    toNumber(values.savings.HSA) +
-    toNumber(values.savings.IRA);
+    traditional401kAmount +
+    traditionalIraAmount +
+    toNumber(values.savings.HSA);
 
   const afterTaxAdvantaged =
-    (values.savings["401k Is Roth"] ? toNumber(values.savings["401k"]) : 0) +
-    toNumber(values.savings["Roth 401k"]) +
-    toNumber(values.savings["Roth IRA"]) +
+    roth401kAmount +
+    rothIraAmount +
     toNumber(values.savings["Back Door"]) +
     toNumber(values.savings["529"]);
 
@@ -579,6 +623,13 @@ function App() {
     annualPretaxContrib + annualAfterTaxAdvantaged + annualAfterTaxCustom;
   const annualTotalOutflow =
     (expensesFixed + subscriptionsTotal + wantsTotal + hobbiesTotal) * annualMultiplier;
+  const annualNeedsTotal = (expensesFixed + subscriptionsTotal) * annualMultiplier;
+  const annualWantsTotal = (wantsTotal + hobbiesTotal) * annualMultiplier;
+  const annualAfterTaxInvestments =
+    (roth401kAmount + rothIraAmount + toNumber(values.savings["529"]) + afterTaxCustom) *
+    annualMultiplier;
+  const annualPersonalExpenditures =
+    annualAfterTaxInvestments + annualWantsTotal + annualNeedsTotal;
 
   const annualTakeHomePay =
     annualGrossIncome -
@@ -596,6 +647,12 @@ function App() {
   const displayAfterTaxAdvantaged = annualAfterTaxAdvantaged / displayDivisor;
   const displayAfterTaxCustom = annualAfterTaxCustom / displayDivisor;
   const displayTakeHomePay = annualTakeHomePay / displayDivisor;
+  const displaySpendingBreakdown = {
+    afterTaxInvestments: annualAfterTaxInvestments / displayDivisor,
+    wants: annualWantsTotal / displayDivisor,
+    needs: annualNeedsTotal / displayDivisor,
+    personalExpenditures: annualPersonalExpenditures / displayDivisor
+  };
   const displayTaxDetails = {
     federal: taxDetails.federal / displayDivisor,
     state: taxDetails.state / displayDivisor,
@@ -745,6 +802,17 @@ function App() {
                     <span>Roth 401k</span>
                   </label>
                 )}
+                {field === "IRA" && (
+                  <label className="rsu-include-toggle">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(values.savings["IRA Is Roth"])}
+                      onChange={(e) => commitIraIsRoth(e.target.checked)}
+                    />
+                    <span className="rsu-toggle-indicator"></span>
+                    <span>Roth IRA</span>
+                  </label>
+                )}
               </>
             )}
           </div>
@@ -861,6 +929,7 @@ function App() {
           afterTaxAdvantaged={displayAfterTaxAdvantaged}
           afterTaxCustom={displayAfterTaxCustom}
           takeHomePay={displayTakeHomePay}
+          spendingBreakdown={displaySpendingBreakdown}
           taxDetails={displayTaxDetails}
         />
       )}

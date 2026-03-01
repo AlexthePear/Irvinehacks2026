@@ -16,6 +16,7 @@ function BudgetingPage({
   afterTaxAdvantaged,
   afterTaxCustom,
   takeHomePay,
+  spendingBreakdown,
   taxDetails
 }) {
   return (
@@ -31,6 +32,7 @@ function BudgetingPage({
         afterTaxAdvantaged={afterTaxAdvantaged}
         afterTaxCustom={afterTaxCustom}
         takeHomePay={takeHomePay}
+        spendingBreakdown={spendingBreakdown}
         taxDetails={taxDetails}
       />
 

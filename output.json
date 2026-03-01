@@ -6,27 +6,28 @@
     "Years of Experience": "1"
   },
   "comp": {
-    "Base Pay": "11958.36",
-    "Bonus": "1250.04",
+    "Base Pay": "11958.33",
+    "Bonus": "1250",
     "Filing Status": "Single",
-    "Include RSU in Gross Income": true,
+    "Include RSU in Gross Income": false,
+    "Input Period": "monthly",
     "Location (State)": "california",
     "Misc": "0",
-    "RSU": "4166.64"
+    "RSU": "4166.67"
   },
   "expenses": {
     "Debt Payments": "0",
     "Groceries": "300",
-    "Healthcare": "99.96",
+    "Healthcare": "100",
     "Housing": "3000",
-    "Insurances": "99.96",
+    "Insurances": "100",
     "Subscriptions": [
       {
-        "amount": "20.04",
+        "amount": "20",
         "name": "ChatGPT"
       },
       {
-        "amount": "17.04",
+        "amount": "17",
         "name": "Spotify"
       },
       {
@@ -34,45 +35,46 @@
         "name": "Planet Fitness"
       },
       {
-        "amount": "99.96",
+        "amount": "100",
         "name": "Movement"
       }
     ],
-    "Transportation": "99.96",
-    "Utilities": "99.96"
+    "Transportation": "100",
+    "Utilities": "100"
+  },
+  "meta": {
+    "inputPeriod": "monthly"
   },
   "savings": {
-    "401k": "2041.68",
-    "529": "833.28",
+    "401k": "2041.67",
+    "401k Is Roth": false,
+    "529": "500",
     "Back Door": "0",
     "CustomAccounts": [
       {
-        "amount": "",
+        "amount": "1000",
         "name": "Brokerage"
-      },
-      {
-        "amount": "",
-        "name": "Porn Fund"
       }
     ],
-    "HSA": "266.64",
-    "IRA": "0",
+    "HSA": "266.67",
+    "IRA": "625",
+    "IRA Is Roth": true,
     "Roth 401k": "",
-    "Roth IRA": "624.96"
+    "Roth IRA": "625"
   },
   "wants": {
-    "Dining": "999.96",
-    "Entertainment": "200.04",
+    "Dining": "1000",
+    "Entertainment": "100",
     "Hobbies": [
       {
-        "amount": "99.96",
+        "amount": "50",
         "name": "Pickleball"
       },
       {
-        "amount": "99.96",
+        "amount": "50",
         "name": "Skiing"
       }
     ],
-    "Travel": "500.04"
+    "Travel": "500"
   }
 }

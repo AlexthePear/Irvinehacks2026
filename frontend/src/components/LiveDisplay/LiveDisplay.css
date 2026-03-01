@@ -151,3 +151,13 @@
   font-size: 0.95rem;
   color: #cfefff;
 }
+
+.tax-row.tax-section-label {
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 0, 140, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.78rem;
+  color: #ffb0cf;
+}
