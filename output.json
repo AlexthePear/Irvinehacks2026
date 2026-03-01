@@ -68,11 +68,11 @@
     "Hobbies": [
       {
         "amount": "50",
-        "name": "Pickleball"
+        "name": "Skiing"
       },
       {
-        "amount": "50",
-        "name": "Skiing"
+        "amount": "",
+        "name": ""
       }
     ],
     "Travel": "500"

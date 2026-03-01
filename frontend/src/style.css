@@ -7,10 +7,17 @@ body,
 
 html {
     color: #eefcff;
+    background: #04050d;
+    scroll-behavior: smooth;
 }
 
 body {
     font-family: "Nunito", "Trebuchet MS", sans-serif;
+    background: #04050d;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
 }
 
 @font-face {
@@ -23,4 +30,17 @@ body {
 
 #app {
     min-height: 100vh;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
 }
