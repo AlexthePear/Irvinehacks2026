@@ -6,13 +6,13 @@
     "Years of Experience": ""
   },
   "comp": {
-    "Base Pay": "120000",
+    "Base Pay": "1450000",
     "Bonus": "",
     "Filing Status": "",
     "Include RSU in Gross Income": false,
     "Location (State)": "",
     "Misc": "",
-    "RSU": "500"
+    "RSU": ""
   },
   "expenses": {
     "Debt Payments": "",
@@ -37,12 +37,7 @@
   "wants": {
     "Dining": "",
     "Entertainment": "",
-    "Hobbies": [
-      {
-        "amount": "",
-        "name": ""
-      }
-    ],
+    "Hobbies": [],
     "Travel": ""
   }
 }
