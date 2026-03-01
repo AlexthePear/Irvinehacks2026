@@ -822,7 +822,9 @@ function App() {
         />
       )}
 
-      {activePage === "investments" && <InvestmentsPage />}
+      {activePage === "investments" && (
+        <InvestmentsPage savings={values.savings} isMonthly={isMonthly} />
+      )}
     </div>
   );
 }
