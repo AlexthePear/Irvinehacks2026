@@ -1,7 +1,8 @@
 .live-display {
-  width: 100%;
+  width: min(var(--content-max-width, 1120px), 100%);
   margin: 0 auto 22px;
   color: #eefcff;
+  box-sizing: border-box;
 }
 
 .period-toggle {
