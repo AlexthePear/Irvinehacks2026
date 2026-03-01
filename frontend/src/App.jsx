@@ -272,6 +272,7 @@ function App() {
   const [aiResponse, setAiResponse] = useState("");
   const [aiError, setAiError] = useState("");
   const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
+  const [isAiPanelPending, setIsAiPanelPending] = useState(false);
 
   const toNumber = (val) => Number(val || 0);
   const annualMultiplier = isMonthly ? 12 : 1;
@@ -322,11 +323,45 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if (activeTab !== "ai") {
+      setIsAiPanelPending(false);
+      return undefined;
+    }
+
+    setIsAiPanelPending(true);
+    const aiRevealDelayMs = 500 + Math.floor(Math.random() * 301);
+    const timer = window.setTimeout(() => {
+      setIsAiPanelPending(false);
+    }, aiRevealDelayMs);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [activeTab]);
+
+  useEffect(() => {
+    const handleSaveShortcut = (event) => {
+      const isSaveCombo = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s";
+      if (!isSaveCombo) {
+        return;
+      }
+
+      event.preventDefault();
+      runAiInsights();
+    };
+
+    window.addEventListener("keydown", handleSaveShortcut);
+
+    return () => {
+      window.removeEventListener("keydown", handleSaveShortcut);
+    };
+  }, [values, isMonthly, aiPrompt]);
+
   const runAiInsights = async (promptOverride) => {
     const nextPrompt = (promptOverride ?? aiPrompt).trim() || defaultInsightPrompt;
     setIsGeneratingInsights(true);
     setAiError("");
-    setAiResponse("");
 
     try {
       await persistValues(values);
@@ -342,9 +377,6 @@ function App() {
 
   const handleBudgetTabChange = (tabId) => {
     setActiveTab(tabId);
-    if (tabId === "ai") {
-      runAiInsights();
-    }
   };
 
   const updateDraftField = (tab, field, nextValue) => {
@@ -660,6 +692,7 @@ function App() {
     total: taxDetails.total / displayDivisor
   };
   const aiResponseHtml = aiResponse ? renderMarkdownToHtml(aiResponse) : "";
+  const shouldShowAiLoading = isAiPanelPending || isGeneratingInsights;
 
   useEffect(() => {
     const filingStatus = values.comp["Filing Status"] || "single";
@@ -854,19 +887,12 @@ function App() {
 
   const renderAiPanel = () => (
     <div className="ai-insights-panel">
-      <div className="ai-actions">
-        <button
-          type="button"
-          className="add-hobby-button"
-          onClick={() => runAiInsights(aiPrompt)}
-          disabled={isGeneratingInsights}
-        >
-          {isGeneratingInsights ? "Generating..." : "Regenerate Insights"}
-        </button>
-      </div>
+      {/* <div className="ai-actions">
+        Press Ctrl+S to refresh and cache your latest AI insights.
+      </div> */}
       <div className="ai-output-shell">
         <label className="ai-output-label">AI Insight Output</label>
-        {isGeneratingInsights ? (
+        {shouldShowAiLoading ? (
           <div className="ai-loading-state" role="status" aria-live="polite">
             <div className="ai-loading-orb"></div>
             <div className="ai-loading-lines">
@@ -878,7 +904,7 @@ function App() {
           </div>
         ) : (
           <div className="ai-response-content">
-            {aiError ? (
+            {aiError && !aiResponseHtml ? (
               aiError
             ) : aiResponseHtml ? (
               <div

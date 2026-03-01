@@ -34,9 +34,32 @@
     inset: 0;
     background-image:
         linear-gradient(rgba(0, 255, 240, 0.07) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 0, 140, 0.07) 1px, transparent 1px);
-    background-size: 60px 60px;
-    animation: gridMove 25s linear infinite;
+        linear-gradient(90deg, rgba(255, 0, 140, 0.07) 1px, transparent 1px),
+        linear-gradient(rgba(0, 255, 240, 0.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 0, 140, 0.055) 1px, transparent 1px),
+        linear-gradient(rgba(0, 255, 240, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 0, 140, 0.045) 1px, transparent 1px),
+        linear-gradient(rgba(0, 255, 240, 0.036) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 0, 140, 0.036) 1px, transparent 1px),
+        linear-gradient(rgba(0, 255, 240, 0.028) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 0, 140, 0.028) 1px, transparent 1px),
+        linear-gradient(rgba(0, 255, 240, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 0, 140, 0.02) 1px, transparent 1px);
+    background-size:
+        60px 60px, 60px 60px,
+        84px 84px, 84px 84px,
+        112px 112px, 112px 112px,
+        148px 148px, 148px 148px,
+        196px 196px, 196px 196px,
+        244px 244px, 244px 244px;
+    background-position:
+        0 0, 0 0,
+        18px 12px, 18px 12px,
+        -24px 30px, -24px 30px,
+        42px -18px, 42px -18px,
+        -36px -28px, -36px -28px,
+        55px 24px, 55px 24px;
+    animation: gridMove 28s linear infinite;
     pointer-events: none;
     z-index: 0;
 }
@@ -74,8 +97,24 @@ body::before {
 
 /* Grid Animation */
 @keyframes gridMove {
-    from { background-position: 0 0, 0 0; }
-    to { background-position: 0 600px, 600px 0; }
+    from {
+        background-position:
+            0 0, 0 0,
+            18px 12px, 18px 12px,
+            -24px 30px, -24px 30px,
+            42px -18px, 42px -18px,
+            -36px -28px, -36px -28px,
+            55px 24px, 55px 24px;
+    }
+    to {
+        background-position:
+            0 600px, 600px 0,
+            18px 480px, 438px 12px,
+            -24px 730px, 696px 30px,
+            42px 562px, 634px -18px,
+            -36px 412px, 512px -28px,
+            55px 824px, 844px 24px;
+    }
 }
 
 /* Smooth ambient neon breathing glow */
@@ -269,6 +308,41 @@ body::before {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
+}
+
+.page-shell {
+    position: relative;
+    width: min(var(--content-max-width), 100%);
+    display: grid;
+    gap: 24px;
+    z-index: 1;
+}
+
+.page-shell::before {
+    content: "";
+    position: absolute;
+    width: 420px;
+    height: 420px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 0, 140, 0.15), transparent 66%);
+    filter: blur(18px);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.page-shell > * {
+    position: relative;
+    z-index: 1;
+}
+
+.budgeting-page::before {
+    left: -140px;
+    bottom: -120px;
+}
+
+.investments-page::before {
+    right: -140px;
+    top: -120px;
 }
 
 .tab-toggle {
@@ -660,7 +734,7 @@ body::before {
 }
 
 .investments-page {
-    width: min(1120px, 100%);
+    width: 100%;
     display: grid;
     gap: 24px;
     justify-items: center;
@@ -1021,6 +1095,22 @@ body::before {
     .page-header {
         flex-direction: column;
         align-items: flex-start;
+    }
+
+    .page-shell::before {
+        width: 280px;
+        height: 280px;
+        filter: blur(12px);
+    }
+
+    .budgeting-page::before {
+        left: -90px;
+        bottom: -70px;
+    }
+
+    .investments-page::before {
+        right: -90px;
+        top: -70px;
     }
 
     .page-grid {

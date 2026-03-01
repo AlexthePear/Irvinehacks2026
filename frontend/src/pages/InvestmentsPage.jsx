@@ -682,7 +682,7 @@ function InvestmentsPage({ savings, isMonthly }) {
   return (
     <div
       id="investments-page"
-      className="investments-page"
+      className="page-shell investments-page"
       role="tabpanel"
       aria-label="Investments"
     >
