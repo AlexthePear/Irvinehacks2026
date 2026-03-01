@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 
 const baseAccounts = [
   { key: "401k", label: "401k" },
-  { key: "IRA", label: "IRA" },
+  { key: "IRA", label: "Traditional IRA" },
+  { key: "Roth IRA", label: "Roth IRA" },
   { key: "HSA", label: "HSA" },
-  { key: "Back Door", label: "Back Door IRA" },
   { key: "529", label: "529" }
 ];
 
@@ -523,15 +523,9 @@ function InvestmentsPage({ savings, isMonthly }) {
       }
 
       const monthlyContribution = isMonthly ? rawAmount : rawAmount / 12;
-      const derivedLabel =
-        account.key === "401k" && savings?.["401k Is Roth"]
-          ? "Roth 401k"
-          : account.key === "IRA" && savings?.["IRA Is Roth"]
-            ? "Roth IRA"
-            : account.label;
       derived.push({
         id: account.key,
-        label: derivedLabel,
+        label: account.label,
         monthlyContribution: roundTwo(monthlyContribution)
       });
     });
@@ -682,7 +676,7 @@ function InvestmentsPage({ savings, isMonthly }) {
   return (
     <div
       id="investments-page"
-      className="investments-page"
+      className="page-shell investments-page"
       role="tabpanel"
       aria-label="Investments"
     >
@@ -781,7 +775,7 @@ function InvestmentsPage({ savings, isMonthly }) {
 
                       <div className="settings-field investment-field">
                         <label htmlFor={`${account.id}-contrib`}>
-                          Additional contribution amount
+                          Contribution amount
                         </label>
                         <input
                           id={`${account.id}-contrib`}

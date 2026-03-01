@@ -29,6 +29,7 @@ const tabFields = {
   comp: ["Base Pay", "Bonus", "RSU", "Location (State)", "Filing Status", "Misc"],
   savings: [
     "401k",
+    "401k Company Match",
     "IRA",
     "HSA",
     "Back Door",
@@ -65,6 +66,7 @@ const initialState = {
   },
   savings: {
     "401k": "",
+    "401k Company Match": "",
     "401k Is Roth": false,
     IRA: "",
     "IRA Is Roth": false,
@@ -272,6 +274,7 @@ function App() {
   const [aiResponse, setAiResponse] = useState("");
   const [aiError, setAiError] = useState("");
   const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
+  const [isAiPanelPending, setIsAiPanelPending] = useState(false);
 
   const toNumber = (val) => Number(val || 0);
   const annualMultiplier = isMonthly ? 12 : 1;
@@ -322,11 +325,45 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if (activeTab !== "ai") {
+      setIsAiPanelPending(false);
+      return undefined;
+    }
+
+    setIsAiPanelPending(true);
+    const aiRevealDelayMs = 500 + Math.floor(Math.random() * 301);
+    const timer = window.setTimeout(() => {
+      setIsAiPanelPending(false);
+    }, aiRevealDelayMs);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [activeTab]);
+
+  useEffect(() => {
+    const handleSaveShortcut = (event) => {
+      const isSaveCombo = (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s";
+      if (!isSaveCombo) {
+        return;
+      }
+
+      event.preventDefault();
+      runAiInsights();
+    };
+
+    window.addEventListener("keydown", handleSaveShortcut);
+
+    return () => {
+      window.removeEventListener("keydown", handleSaveShortcut);
+    };
+  }, [values, isMonthly, aiPrompt]);
+
   const runAiInsights = async (promptOverride) => {
     const nextPrompt = (promptOverride ?? aiPrompt).trim() || defaultInsightPrompt;
     setIsGeneratingInsights(true);
     setAiError("");
-    setAiResponse("");
 
     try {
       await persistValues(values);
@@ -342,9 +379,6 @@ function App() {
 
   const handleBudgetTabChange = (tabId) => {
     setActiveTab(tabId);
-    if (tabId === "ai") {
-      runAiInsights();
-    }
   };
 
   const updateDraftField = (tab, field, nextValue) => {
@@ -495,6 +529,7 @@ function App() {
     savings: {
       ...state.savings,
       "401k": scaleNumericString(state.savings["401k"], ratio),
+      "401k Company Match": scaleNumericString(state.savings["401k Company Match"], ratio),
       IRA: scaleNumericString(state.savings.IRA, ratio),
       HSA: scaleNumericString(state.savings.HSA, ratio),
       "Back Door": scaleNumericString(state.savings["Back Door"], ratio),
@@ -568,20 +603,35 @@ function App() {
     (values.comp["Include RSU in Gross Income"] ? toNumber(values.comp.RSU) : 0) +
     toNumber(values.comp.Misc);
 
-  const roth401kAmount = values.savings["401k Is Roth"] ? toNumber(values.savings["401k"]) : 0;
-  const traditional401kAmount = values.savings["401k Is Roth"] ? 0 : toNumber(values.savings["401k"]);
+  const employee401kAmount = toNumber(values.savings["401k"]);
+  const company401kMatchAmount = toNumber(values.savings["401k Company Match"]);
+  const roth401kAmount = values.savings["401k Is Roth"] ? employee401kAmount : 0;
+  const traditional401kAmount = values.savings["401k Is Roth"] ? 0 : employee401kAmount;
   const rothIraAmount = values.savings["IRA Is Roth"] ? toNumber(values.savings.IRA) : 0;
   const traditionalIraAmount = values.savings["IRA Is Roth"] ? 0 : toNumber(values.savings.IRA);
+  const annual401kTotalLimit = 72000;
+  const annualEmployee401kAmount = employee401kAmount * annualMultiplier;
+  const annualCompany401kMatchAmount = company401kMatchAmount * annualMultiplier;
+  const annualBackDoorRequested = toNumber(values.savings["Back Door"]) * annualMultiplier;
+  const annualMegaBackDoorCapacity = Math.max(
+    annual401kTotalLimit - annualEmployee401kAmount - annualCompany401kMatchAmount,
+    0
+  );
+  const annualMegaBackDoorContribution = Math.min(
+    annualBackDoorRequested,
+    annualMegaBackDoorCapacity
+  );
+  const megaBackDoorContribution = annualMegaBackDoorContribution / annualMultiplier;
+  const rothIraTotalForInvestments = rothIraAmount + megaBackDoorContribution;
 
-  const pretaxContrib =
-    traditional401kAmount +
-    traditionalIraAmount +
-    toNumber(values.savings.HSA);
+  const pretaxTaxDeductibleContrib =
+    traditional401kAmount + traditionalIraAmount + toNumber(values.savings.HSA);
+  const pretaxSavingsContrib = pretaxTaxDeductibleContrib + company401kMatchAmount;
 
   const afterTaxAdvantaged =
     roth401kAmount +
     rothIraAmount +
-    toNumber(values.savings["Back Door"]) +
+    megaBackDoorContribution +
     toNumber(values.savings["529"]);
 
   const afterTaxCustom = values.savings.CustomAccounts.reduce(
@@ -614,26 +664,34 @@ function App() {
   );
 
   const annualGrossIncome = grossIncome * annualMultiplier;
-  const annualPretaxContrib = pretaxContrib * annualMultiplier;
+  const annualPretaxTaxDeductibleContrib = pretaxTaxDeductibleContrib * annualMultiplier;
+  const annualPretaxSavingsContrib = pretaxSavingsContrib * annualMultiplier;
   const annualAfterTaxAdvantaged = afterTaxAdvantaged * annualMultiplier;
   const annualAfterTaxCustom = afterTaxCustom * annualMultiplier;
-  const annualAdjustedGrossIncome = Math.max(annualGrossIncome - annualPretaxContrib, 0);
-  const annualDeductionsSaved = Math.max(annualPretaxContrib, 0);
+  const annualAdjustedGrossIncome = Math.max(
+    annualGrossIncome - annualPretaxTaxDeductibleContrib,
+    0
+  );
+  const annualDeductionsSaved = Math.max(annualPretaxTaxDeductibleContrib, 0);
   const annualInvestmentsTotal =
-    annualPretaxContrib + annualAfterTaxAdvantaged + annualAfterTaxCustom;
+    annualPretaxSavingsContrib + annualAfterTaxAdvantaged + annualAfterTaxCustom;
   const annualTotalOutflow =
     (expensesFixed + subscriptionsTotal + wantsTotal + hobbiesTotal) * annualMultiplier;
   const annualNeedsTotal = (expensesFixed + subscriptionsTotal) * annualMultiplier;
   const annualWantsTotal = (wantsTotal + hobbiesTotal) * annualMultiplier;
   const annualAfterTaxInvestments =
-    (roth401kAmount + rothIraAmount + toNumber(values.savings["529"]) + afterTaxCustom) *
+    (roth401kAmount +
+      rothIraAmount +
+      megaBackDoorContribution +
+      toNumber(values.savings["529"]) +
+      afterTaxCustom) *
     annualMultiplier;
   const annualPersonalExpenditures =
     annualAfterTaxInvestments + annualWantsTotal + annualNeedsTotal;
 
   const annualTakeHomePay =
     annualGrossIncome -
-    annualPretaxContrib -
+    annualPretaxTaxDeductibleContrib -
     taxDetails.total -
     annualAfterTaxAdvantaged -
     annualAfterTaxCustom -
@@ -643,7 +701,7 @@ function App() {
   const displayAdjustedGrossIncome = annualAdjustedGrossIncome / displayDivisor;
   const displayDeductionsSaved = annualDeductionsSaved / displayDivisor;
   const displayInvestmentsTotal = annualInvestmentsTotal / displayDivisor;
-  const displayPretaxTotal = annualPretaxContrib / displayDivisor;
+  const displayPretaxTotal = annualPretaxSavingsContrib / displayDivisor;
   const displayAfterTaxAdvantaged = annualAfterTaxAdvantaged / displayDivisor;
   const displayAfterTaxCustom = annualAfterTaxCustom / displayDivisor;
   const displayTakeHomePay = annualTakeHomePay / displayDivisor;
@@ -660,6 +718,14 @@ function App() {
     total: taxDetails.total / displayDivisor
   };
   const aiResponseHtml = aiResponse ? renderMarkdownToHtml(aiResponse) : "";
+  const shouldShowAiLoading = isAiPanelPending || isGeneratingInsights;
+  const savingsForInvestments = {
+    ...values.savings,
+    "401k": employee401kAmount + company401kMatchAmount,
+    IRA: traditionalIraAmount,
+    "Roth IRA": rothIraTotalForInvestments,
+    "Back Door": megaBackDoorContribution
+  };
 
   useEffect(() => {
     const filingStatus = values.comp["Filing Status"] || "single";
@@ -854,19 +920,9 @@ function App() {
 
   const renderAiPanel = () => (
     <div className="ai-insights-panel">
-      <div className="ai-actions">
-        <button
-          type="button"
-          className="add-hobby-button"
-          onClick={() => runAiInsights(aiPrompt)}
-          disabled={isGeneratingInsights}
-        >
-          {isGeneratingInsights ? "Generating..." : "Regenerate Insights"}
-        </button>
-      </div>
       <div className="ai-output-shell">
         <label className="ai-output-label">AI Insight Output</label>
-        {isGeneratingInsights ? (
+        {shouldShowAiLoading ? (
           <div className="ai-loading-state" role="status" aria-live="polite">
             <div className="ai-loading-orb"></div>
             <div className="ai-loading-lines">
@@ -878,7 +934,7 @@ function App() {
           </div>
         ) : (
           <div className="ai-response-content">
-            {aiError ? (
+            {aiError && !aiResponseHtml ? (
               aiError
             ) : aiResponseHtml ? (
               <div
@@ -935,7 +991,7 @@ function App() {
       )}
 
       {activePage === "investments" && (
-        <InvestmentsPage savings={values.savings} isMonthly={isMonthly} />
+        <InvestmentsPage savings={savingsForInvestments} isMonthly={isMonthly} />
       )}
     </div>
   );

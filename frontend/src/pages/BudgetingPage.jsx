@@ -20,7 +20,7 @@ function BudgetingPage({
   taxDetails
 }) {
   return (
-    <div id="budgeting-page" role="tabpanel" aria-label="Budgeting">
+    <div id="budgeting-page" className="page-shell budgeting-page" role="tabpanel" aria-label="Budgeting">
       <LiveDisplay
         isMonthly={isMonthly}
         onTogglePeriod={onTogglePeriod}
