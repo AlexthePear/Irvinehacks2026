@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import LiveDisplay from "./components/LiveDisplay/LiveDisplay";
+import BudgetingPage from "./pages/BudgetingPage";
+import InvestmentsPage from "./pages/InvestmentsPage";
 import {
   WriteToJson,
   ReadFromJson,
@@ -10,7 +11,12 @@ import {
 } from "../wailsjs/go/main/App";
 import "./App.css";
 
-const tabs = [
+const pages = [
+  { id: "budgeting", label: "Budgeting" },
+  { id: "investments", label: "Investments" }
+];
+
+const budgetingTabs = [
   { id: "comp", label: "Compensation" },
   { id: "savings", label: "Savings" },
   { id: "expenses", label: "Expenses" },
@@ -234,7 +240,8 @@ const renderMarkdownToHtml = (markdown) => {
 };
 
 function App() {
-  const [activeTab, setActiveTab] = useState(tabs[0].id);
+  const [activePage, setActivePage] = useState(pages[0].id);
+  const [activeTab, setActiveTab] = useState(budgetingTabs[0].id);
   const [values, setValues] = useState(initialState);
   const [draftValues, setDraftValues] = useState(initialState);
   const [isMonthly, setIsMonthly] = useState(false);
@@ -303,7 +310,7 @@ function App() {
     }
   };
 
-  const handleTabChange = (tabId) => {
+  const handleBudgetTabChange = (tabId) => {
     setActiveTab(tabId);
     if (tabId === "ai") {
       runAiInsights();
@@ -778,42 +785,44 @@ function App() {
 
   return (
     <div id="App">
-      <LiveDisplay
-        isMonthly={isMonthly}
-        onTogglePeriod={handleTogglePeriod}
-        grossIncome={displayGrossIncome}
-        adjustedGrossIncome={displayAdjustedGrossIncome}
-        deductionsSaved={displayDeductionsSaved}
-        investmentsTotal={displayInvestmentsTotal}
-        pretaxTotal={displayPretaxTotal}
-        afterTaxAdvantaged={displayAfterTaxAdvantaged}
-        afterTaxCustom={displayAfterTaxCustom}
-        takeHomePay={displayTakeHomePay}
-        taxDetails={displayTaxDetails}
-      />
-
-      <div className="panel-shell">
-        <div className="tab-row">
-          {tabs.map((tab) => (
-            <label
-              className={`tab-toggle ${tab.variant === "ai" ? "tab-toggle-ai" : ""}`}
-              key={tab.id}
-            >
-              <input
-                type="radio"
-                name="tabs"
-                checked={activeTab === tab.id}
-                onChange={() => handleTabChange(tab.id)}
-              />
-              <span>{tab.label}</span>
-            </label>
-          ))}
-        </div>
-
-        <div className={`settings-window ${activeTab === "ai" ? "settings-window-ai" : ""}`}>
-          {activeTab === "ai" ? renderAiPanel() : renderStandardFields()}
-        </div>
+      <div className="page-row" role="tablist" aria-label="Primary pages">
+        {pages.map((page) => (
+          <button
+            key={page.id}
+            type="button"
+            role="tab"
+            aria-selected={activePage === page.id}
+            aria-controls={`${page.id}-page`}
+            className={`page-toggle ${activePage === page.id ? "is-active" : ""}`}
+            onClick={() => setActivePage(page.id)}
+          >
+            {page.label}
+          </button>
+        ))}
       </div>
+
+      {activePage === "budgeting" && (
+        <BudgetingPage
+          activeTab={activeTab}
+          onTabChange={handleBudgetTabChange}
+          tabs={budgetingTabs}
+          renderAiPanel={renderAiPanel}
+          renderStandardFields={renderStandardFields}
+          isMonthly={isMonthly}
+          onTogglePeriod={handleTogglePeriod}
+          grossIncome={displayGrossIncome}
+          adjustedGrossIncome={displayAdjustedGrossIncome}
+          deductionsSaved={displayDeductionsSaved}
+          investmentsTotal={displayInvestmentsTotal}
+          pretaxTotal={displayPretaxTotal}
+          afterTaxAdvantaged={displayAfterTaxAdvantaged}
+          afterTaxCustom={displayAfterTaxCustom}
+          takeHomePay={displayTakeHomePay}
+          taxDetails={displayTaxDetails}
+        />
+      )}
+
+      {activePage === "investments" && <InvestmentsPage />}
     </div>
   );
 }
