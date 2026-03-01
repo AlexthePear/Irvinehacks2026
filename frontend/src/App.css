@@ -119,7 +119,7 @@ body::before {
 .panel-shell {
     position: relative;
     z-index: 1;
-    width: min(960px, 100%);
+    width: min(1120px, 100%);
     padding: 28px;
     box-sizing: border-box;
     border: 1px solid rgba(0, 255, 240, 0.35);
@@ -183,25 +183,48 @@ body::before {
 /* ========================= */
 
 .tab-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px 22px;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 10px;
     margin-bottom: 22px;
+    width: 100%;
 }
 
 .tab-toggle {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
-    padding: 10px 14px;
+    min-width: 0;
+    padding: 9px 10px;
     border: 1px solid rgba(0, 255, 240, 0.25);
     border-radius: 999px;
     background: rgba(10, 18, 34, 0.72);
     color: #b8f8ff;
-    font-size: 0.95rem;
-    letter-spacing: 0.06em;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
     cursor: pointer;
+}
+
+.tab-toggle span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tab-toggle-ai {
+    border-color: rgba(255, 0, 140, 0.45);
+    background:
+        linear-gradient(135deg, rgba(40, 8, 28, 0.86), rgba(20, 4, 18, 0.92));
+    color: #ffc2e3;
+    box-shadow:
+        0 0 0 1px rgba(255, 0, 140, 0.12) inset,
+        0 0 12px rgba(255, 0, 140, 0.08);
+}
+
+.tab-toggle-ai input {
+    accent-color: #ff008c;
 }
 
 .save-json-button {
@@ -240,6 +263,7 @@ body::before {
 }
 
 .settings-window {
+    width: 100%;
     height: min(60vh, 420px);
     overflow-y: auto;
     padding: 22px;
@@ -260,7 +284,7 @@ body::before {
 .settings-field {
     display: grid;
     gap: 10px;
-    width: min(420px, 100%);
+    width: 100%;
     text-align: left;
 }
 
@@ -289,6 +313,163 @@ body::before {
 
 .settings-field input::placeholder {
     color: rgba(184, 248, 255, 0.45);
+}
+
+.hobby-row {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) minmax(120px, 180px);
+    gap: 10px;
+    align-items: center;
+}
+
+.ai-insights-panel {
+    display: grid;
+    gap: 18px;
+    width: 100%;
+}
+
+.ai-actions {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.ai-actions .add-hobby-button[disabled] {
+    opacity: 0.75;
+    cursor: wait;
+    transform: none;
+}
+
+.ai-output-shell {
+    display: grid;
+    gap: 10px;
+}
+
+.ai-output-label {
+    color: #ffc2e3;
+    font-size: 0.82rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.settings-window-ai {
+    min-height: 420px;
+}
+
+.ai-response-content {
+    min-height: 260px;
+    padding: 22px;
+    border: 1px solid rgba(255, 0, 140, 0.28);
+    border-radius: 14px;
+    background:
+        linear-gradient(180deg, rgba(13, 21, 40, 0.86), rgba(9, 10, 24, 0.94));
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 0, 140, 0.08),
+        inset 0 18px 32px rgba(0, 0, 0, 0.2);
+    color: #eefcff;
+    white-space: pre-wrap;
+    line-height: 1.65;
+}
+
+.ai-loading-state {
+    position: relative;
+    display: grid;
+    place-items: center;
+    gap: 16px;
+    min-height: 260px;
+    padding: 24px;
+    border: 1px solid rgba(255, 0, 140, 0.3);
+    border-radius: 14px;
+    background:
+        radial-gradient(circle at top, rgba(255, 0, 140, 0.08), transparent 48%),
+        linear-gradient(180deg, rgba(13, 21, 40, 0.92), rgba(9, 10, 24, 0.98));
+    overflow: hidden;
+}
+
+.ai-loading-state::before {
+    content: "";
+    position: absolute;
+    inset: -20%;
+    background: linear-gradient(
+        115deg,
+        transparent 20%,
+        rgba(255, 0, 140, 0.08) 40%,
+        rgba(255, 0, 140, 0.12) 52%,
+        transparent 68%
+    );
+    animation: aiSweep 2.4s linear infinite;
+}
+
+.ai-loading-orb {
+    position: relative;
+    z-index: 1;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 0, 140, 0.22);
+    border-top-color: #ff008c;
+    border-right-color: #ff6bb7;
+    box-shadow:
+        0 0 16px rgba(255, 0, 140, 0.24),
+        inset 0 0 18px rgba(255, 0, 140, 0.08);
+    animation: aiSpin 1s linear infinite;
+}
+
+.ai-loading-lines {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 8px;
+    width: min(420px, 100%);
+}
+
+.ai-loading-lines span {
+    display: block;
+    height: 10px;
+    border-radius: 999px;
+    background:
+        linear-gradient(90deg, rgba(255, 0, 140, 0.12), rgba(255, 0, 140, 0.34), rgba(255, 107, 183, 0.16));
+    background-size: 200% 100%;
+    animation: aiPulse 1.4s ease-in-out infinite;
+}
+
+.ai-loading-lines span:nth-child(2) {
+    width: 88%;
+    animation-delay: 0.12s;
+}
+
+.ai-loading-lines span:nth-child(3) {
+    width: 74%;
+    animation-delay: 0.24s;
+}
+
+.ai-loading-state p {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    color: #ffc2e3;
+    letter-spacing: 0.04em;
+    text-align: center;
+}
+
+@keyframes aiSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes aiPulse {
+    0%, 100% {
+        opacity: 0.45;
+        background-position: 0% 50%;
+    }
+    50% {
+        opacity: 1;
+        background-position: 100% 50%;
+    }
+}
+
+@keyframes aiSweep {
+    from { transform: translateX(-30%) skewX(-12deg); }
+    to { transform: translateX(30%) skewX(-12deg); }
 }
 
 .settings-field select {
@@ -378,8 +559,29 @@ body::before {
         border-radius: 14px;
     }
 
+    .tab-row {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .tab-toggle {
+        font-size: 0.72rem;
+        padding: 8px 8px;
+    }
+
     .settings-window {
         height: 320px;
         padding: 18px;
+    }
+
+    .hobby-row {
+        grid-template-columns: 1fr;
+    }
+
+    .remove-hobby-button {
+        justify-self: end;
+    }
+
+    .settings-window-ai {
+        min-height: 360px;
     }
 }

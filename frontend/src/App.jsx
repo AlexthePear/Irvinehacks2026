@@ -4,7 +4,8 @@ import {
   WriteToJson,
   CalcFederalTax,
   CalcStateTax,
-  CalcFicaTax
+  CalcFicaTax,
+  GenerateInsights
 } from "../wailsjs/go/main/App";
 import "./App.css";
 
@@ -12,7 +13,9 @@ const tabs = [
   { id: "comp", label: "Compensation" },
   { id: "savings", label: "Savings" },
   { id: "expenses", label: "Expenses" },
-  { id: "wants", label: "Wants" }
+  { id: "wants", label: "Wants" },
+  { id: "career", label: "Career" },
+  { id: "ai", label: "AI Insights", variant: "ai" }
 ];
 
 const tabFields = {
@@ -27,23 +30,32 @@ const tabFields = {
     "529",
     { label: "Custom Accounts", dynamicSavings: true }
   ],
-  expenses: ["Housing", "Groceries", "Utilities", "Transportation", "Healthcare", "Debt Payments", "Insurances"],
-  wants: ["Dining", "Entertainment", "Travel", { label: "Hobbies", dynamic: true }]
+  expenses: [
+    "Housing",
+    "Groceries",
+    "Utilities",
+    "Transportation",
+    "Healthcare",
+    "Debt Payments",
+    "Insurances"
+  ],
+  wants: ["Dining", "Entertainment", "Travel", { label: "Hobbies", dynamic: true }],
+  career: ["Job Title", "Company", "Level", "Years of Experience"]
 };
 
 const initialState = {
   comp: {
     "Base Pay": "",
-    "Bonus": "",
-    "RSU": "",
+    Bonus: "",
+    RSU: "",
     "Location (State)": "",
     "Filing Status": "",
-    "Misc": ""
+    Misc: ""
   },
   savings: {
     "401k": "",
-    "IRA": "",
-    "HSA": "",
+    IRA: "",
+    HSA: "",
     "Back Door": "",
     "Roth 401k": "",
     "Roth IRA": "",
@@ -64,8 +76,26 @@ const initialState = {
     Entertainment: "",
     Travel: "",
     Hobbies: []
+  },
+  career: {
+    "Job Title": "",
+    Company: "",
+    Level: "",
+    "Years of Experience": ""
   }
 };
+
+const defaultInsightPrompt = [
+  "Review this financial planning profile and career context.",
+  "Summarize the user's current position, identify notable risks or opportunities, and suggest practical next steps.",
+  "Use short sections and bullet points when useful."
+].join(" ");
+
+const formatInsightText = (text) =>
+  (text || "")
+    .replace(/\r\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 
 function App() {
   const [activeTab, setActiveTab] = useState(tabs[0].id);
@@ -78,6 +108,10 @@ function App() {
     fica: 0,
     total: 0
   });
+  const [aiPrompt, setAiPrompt] = useState(defaultInsightPrompt);
+  const [aiResponse, setAiResponse] = useState("");
+  const [aiError, setAiError] = useState("");
+  const [isGeneratingInsights, setIsGeneratingInsights] = useState(false);
 
   const persistValues = async (payload) => {
     try {
@@ -87,9 +121,40 @@ function App() {
     }
   };
 
-  /* ===============================
-     Commit Functions
-  =============================== */
+  const runAiInsights = async (promptOverride) => {
+    const nextPrompt = (promptOverride ?? aiPrompt).trim() || defaultInsightPrompt;
+    setIsGeneratingInsights(true);
+    setAiError("");
+    setAiResponse("");
+
+    try {
+      await persistValues(values);
+      const response = await GenerateInsights(nextPrompt);
+      setAiResponse(formatInsightText(response));
+    } catch (err) {
+      console.error("Failed to generate AI insights", err);
+      setAiError("Unable to generate AI insights right now. Check your GEMINI_API_KEY and try again.");
+    } finally {
+      setIsGeneratingInsights(false);
+    }
+  };
+
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    if (tabId === "ai") {
+      runAiInsights();
+    }
+  };
+
+  const updateDraftField = (tab, field, nextValue) => {
+    setDraftValues((prev) => ({
+      ...prev,
+      [tab]: {
+        ...prev[tab],
+        [field]: nextValue
+      }
+    }));
+  };
 
   const commitField = (tab, field) => {
     setValues((prev) => {
@@ -143,46 +208,43 @@ function App() {
     return (n * ratio).toFixed(2).replace(/\.00$/, "");
   };
 
-  const scaleStateByRatio = (state, ratio) => {
-    const scaled = {
-      ...state,
-      comp: {
-        ...state.comp,
-        "Base Pay": scaleNumericString(state.comp["Base Pay"], ratio),
-        Bonus: scaleNumericString(state.comp.Bonus, ratio),
-        RSU: scaleNumericString(state.comp.RSU, ratio),
-        Misc: scaleNumericString(state.comp.Misc, ratio)
-      },
-      savings: {
-        ...state.savings,
-        "401k": scaleNumericString(state.savings["401k"], ratio),
-        IRA: scaleNumericString(state.savings.IRA, ratio),
-        HSA: scaleNumericString(state.savings.HSA, ratio),
-        "Back Door": scaleNumericString(state.savings["Back Door"], ratio),
-        "Roth 401k": scaleNumericString(state.savings["Roth 401k"], ratio),
-        "Roth IRA": scaleNumericString(state.savings["Roth IRA"], ratio),
-        "529": scaleNumericString(state.savings["529"], ratio),
-        CustomAccounts: state.savings.CustomAccounts.map((acct) => ({
-          ...acct,
-          amount: scaleNumericString(acct.amount, ratio)
-        }))
-      },
-      expenses: Object.fromEntries(
-        Object.entries(state.expenses).map(([key, val]) => [key, scaleNumericString(val, ratio)])
-      ),
-      wants: {
-        ...state.wants,
-        Dining: scaleNumericString(state.wants.Dining, ratio),
-        Entertainment: scaleNumericString(state.wants.Entertainment, ratio),
-        Travel: scaleNumericString(state.wants.Travel, ratio),
-        Hobbies: state.wants.Hobbies.map((hobby) => ({
-          ...hobby,
-          amount: scaleNumericString(hobby.amount, ratio)
-        }))
-      }
-    };
-    return scaled;
-  };
+  const scaleStateByRatio = (state, ratio) => ({
+    ...state,
+    comp: {
+      ...state.comp,
+      "Base Pay": scaleNumericString(state.comp["Base Pay"], ratio),
+      Bonus: scaleNumericString(state.comp.Bonus, ratio),
+      RSU: scaleNumericString(state.comp.RSU, ratio),
+      Misc: scaleNumericString(state.comp.Misc, ratio)
+    },
+    savings: {
+      ...state.savings,
+      "401k": scaleNumericString(state.savings["401k"], ratio),
+      IRA: scaleNumericString(state.savings.IRA, ratio),
+      HSA: scaleNumericString(state.savings.HSA, ratio),
+      "Back Door": scaleNumericString(state.savings["Back Door"], ratio),
+      "Roth 401k": scaleNumericString(state.savings["Roth 401k"], ratio),
+      "Roth IRA": scaleNumericString(state.savings["Roth IRA"], ratio),
+      "529": scaleNumericString(state.savings["529"], ratio),
+      CustomAccounts: state.savings.CustomAccounts.map((acct) => ({
+        ...acct,
+        amount: scaleNumericString(acct.amount, ratio)
+      }))
+    },
+    expenses: Object.fromEntries(
+      Object.entries(state.expenses).map(([key, val]) => [key, scaleNumericString(val, ratio)])
+    ),
+    wants: {
+      ...state.wants,
+      Dining: scaleNumericString(state.wants.Dining, ratio),
+      Entertainment: scaleNumericString(state.wants.Entertainment, ratio),
+      Travel: scaleNumericString(state.wants.Travel, ratio),
+      Hobbies: state.wants.Hobbies.map((hobby) => ({
+        ...hobby,
+        amount: scaleNumericString(hobby.amount, ratio)
+      }))
+    }
+  });
 
   const handleTogglePeriod = () => {
     const ratio = isMonthly ? 12 : 1 / 12;
@@ -198,25 +260,21 @@ function App() {
   const getFederalStandardDeduction = (status) => {
     const s = (status || "").toLowerCase();
     if (s === "married" || s === "married filing jointly" || s === "mfj") {
-      return 29200; // 2024 approx
+      return 29200;
     }
-    return 14600; // default single/other
+    return 14600;
   };
-
-  /* ===============================
-     Calculations (Committed Only)
-  =============================== */
 
   const grossIncome =
     toNumber(values.comp["Base Pay"]) +
-    toNumber(values.comp["Bonus"]) +
-    toNumber(values.comp["RSU"]) +
-    toNumber(values.comp["Misc"]);
+    toNumber(values.comp.Bonus) +
+    toNumber(values.comp.RSU) +
+    toNumber(values.comp.Misc);
 
   const pretaxContrib =
     toNumber(values.savings["401k"]) +
-    toNumber(values.savings["HSA"]) +
-    toNumber(values.savings["IRA"]);
+    toNumber(values.savings.HSA) +
+    toNumber(values.savings.IRA);
 
   const afterTaxAdvantaged =
     toNumber(values.savings["Roth 401k"]) +
@@ -280,10 +338,6 @@ function App() {
     total: taxDetails.total / displayDivisor
   };
 
-  /* ===============================
-     Tax calculations via Go helpers
-  =============================== */
-
   useEffect(() => {
     const filingStatus = values.comp["Filing Status"] || "single";
     const stateInput = values.comp["Location (State)"] || "";
@@ -317,6 +371,319 @@ function App() {
     loadTaxes();
   }, [values, annualAdjustedGrossIncome, annualGrossIncome]);
 
+  const renderBasicField = (tab, field) => {
+    const isFilingStatus = field === "Filing Status";
+
+    return (
+      <div className="settings-field" key={field}>
+        <label>{field}</label>
+        {isFilingStatus ? (
+          <select
+            value={draftValues[tab][field] || ""}
+            onChange={(e) => updateDraftField(tab, field, e.target.value)}
+            onBlur={() => commitField(tab, field)}
+          >
+            <option value="">Select filing status</option>
+            <option value="Single">Single</option>
+            <option value="Married">Married</option>
+          </select>
+        ) : (
+          <input
+            type="text"
+            value={draftValues[tab][field] || ""}
+            onChange={(e) => updateDraftField(tab, field, e.target.value)}
+            onBlur={() => commitField(tab, field)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                commitField(tab, field);
+                e.target.blur();
+              }
+            }}
+            placeholder={`Enter ${field}`}
+          />
+        )}
+      </div>
+    );
+  };
+
+  const renderHobbiesField = (field) => (
+    <div className="settings-field" key={field.label}>
+      <label>{field.label}</label>
+
+      {draftValues.wants.Hobbies.map((hobby, index) => (
+        <div key={index} className="hobby-row">
+          <button
+            type="button"
+            className="remove-hobby-button"
+            onClick={() => {
+              const newDraft = draftValues.wants.Hobbies.filter((_, i) => i !== index);
+              const newCommitted = values.wants.Hobbies.filter((_, i) => i !== index);
+
+              setDraftValues((prev) => ({
+                ...prev,
+                wants: { ...prev.wants, Hobbies: newDraft }
+              }));
+
+              setValues((prev) => {
+                const next = {
+                  ...prev,
+                  wants: { ...prev.wants, Hobbies: newCommitted }
+                };
+                persistValues(next);
+                return next;
+              });
+            }}
+          >
+            ×
+          </button>
+
+          <input
+            type="text"
+            placeholder="Hobby name"
+            value={hobby.name || ""}
+            onChange={(e) => {
+              const updated = [...draftValues.wants.Hobbies];
+              updated[index] = {
+                ...updated[index],
+                name: e.target.value
+              };
+              setDraftValues((prev) => ({
+                ...prev,
+                wants: { ...prev.wants, Hobbies: updated }
+              }));
+            }}
+            onBlur={() => commitHobby(index)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                commitHobby(index);
+                e.target.blur();
+              }
+            }}
+          />
+
+          <input
+            type="number"
+            placeholder="Amount"
+            value={hobby.amount || ""}
+            onChange={(e) => {
+              const updated = [...draftValues.wants.Hobbies];
+              updated[index] = {
+                ...updated[index],
+                amount: e.target.value
+              };
+              setDraftValues((prev) => ({
+                ...prev,
+                wants: { ...prev.wants, Hobbies: updated }
+              }));
+            }}
+            onBlur={() => commitHobby(index)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                commitHobby(index);
+                e.target.blur();
+              }
+            }}
+          />
+        </div>
+      ))}
+
+      <button
+        type="button"
+        className="add-hobby-button"
+        onClick={() => {
+          const newHobby = { name: "", amount: "" };
+
+          setDraftValues((prev) => ({
+            ...prev,
+            wants: {
+              ...prev.wants,
+              Hobbies: [...prev.wants.Hobbies, newHobby]
+            }
+          }));
+
+          setValues((prev) => {
+            const next = {
+              ...prev,
+              wants: {
+                ...prev.wants,
+                Hobbies: [...prev.wants.Hobbies, newHobby]
+              }
+            };
+            persistValues(next);
+            return next;
+          });
+        }}
+      >
+        + Add Hobby
+      </button>
+    </div>
+  );
+
+  const renderCustomAccountsField = (field) => (
+    <div className="settings-field" key={field.label}>
+      <label>{field.label}</label>
+
+      {draftValues.savings.CustomAccounts.map((acct, index) => (
+        <div key={index} className="hobby-row">
+          <button
+            type="button"
+            className="remove-hobby-button"
+            onClick={() => {
+              const newDraft = draftValues.savings.CustomAccounts.filter((_, i) => i !== index);
+              const newCommitted = values.savings.CustomAccounts.filter((_, i) => i !== index);
+
+              setDraftValues((prev) => ({
+                ...prev,
+                savings: { ...prev.savings, CustomAccounts: newDraft }
+              }));
+
+              setValues((prev) => {
+                const next = {
+                  ...prev,
+                  savings: { ...prev.savings, CustomAccounts: newCommitted }
+                };
+                persistValues(next);
+                return next;
+              });
+            }}
+          >
+            ×
+          </button>
+
+          <input
+            type="text"
+            placeholder="Account name"
+            value={acct.name || ""}
+            onChange={(e) => {
+              const updated = [...draftValues.savings.CustomAccounts];
+              updated[index] = {
+                ...updated[index],
+                name: e.target.value
+              };
+              setDraftValues((prev) => ({
+                ...prev,
+                savings: { ...prev.savings, CustomAccounts: updated }
+              }));
+            }}
+            onBlur={() => commitCustomAccount(index)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                commitCustomAccount(index);
+                e.target.blur();
+              }
+            }}
+          />
+
+          <input
+            type="number"
+            placeholder="Amount"
+            value={acct.amount || ""}
+            onChange={(e) => {
+              const updated = [...draftValues.savings.CustomAccounts];
+              updated[index] = {
+                ...updated[index],
+                amount: e.target.value
+              };
+              setDraftValues((prev) => ({
+                ...prev,
+                savings: { ...prev.savings, CustomAccounts: updated }
+              }));
+            }}
+            onBlur={() => commitCustomAccount(index)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                commitCustomAccount(index);
+                e.target.blur();
+              }
+            }}
+          />
+        </div>
+      ))}
+
+      <button
+        type="button"
+        className="add-hobby-button"
+        onClick={() => {
+          const newAccount = { name: "", amount: "" };
+
+          setDraftValues((prev) => ({
+            ...prev,
+            savings: {
+              ...prev.savings,
+              CustomAccounts: [...prev.savings.CustomAccounts, newAccount]
+            }
+          }));
+
+          setValues((prev) => {
+            const next = {
+              ...prev,
+              savings: {
+                ...prev.savings,
+                CustomAccounts: [...prev.savings.CustomAccounts, newAccount]
+              }
+            };
+            persistValues(next);
+            return next;
+          });
+        }}
+      >
+        + Add Account
+      </button>
+    </div>
+  );
+
+  const renderStandardFields = () =>
+    tabFields[activeTab].map((field) => {
+      if (typeof field === "string") {
+        return renderBasicField(activeTab, field);
+      }
+
+      if (field.dynamic) {
+        return renderHobbiesField(field);
+      }
+
+      if (field.dynamicSavings) {
+        return renderCustomAccountsField(field);
+      }
+
+      return null;
+    });
+
+  const renderAiPanel = () => (
+    <div className="ai-insights-panel">
+      <div className="ai-actions">
+        <button
+          type="button"
+          className="add-hobby-button"
+          onClick={() => runAiInsights(aiPrompt)}
+          disabled={isGeneratingInsights}
+        >
+          {isGeneratingInsights ? "Generating..." : "Regenerate Insights"}
+        </button>
+      </div>
+
+      <div className="ai-output-shell">
+        <label className="ai-output-label">AI Insight Output</label>
+
+        {isGeneratingInsights ? (
+          <div className="ai-loading-state" role="status" aria-live="polite">
+            <div className="ai-loading-orb"></div>
+            <div className="ai-loading-lines">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+            <p>Analyzing your profile and generating insights...</p>
+          </div>
+        ) : (
+          <div className="ai-response-content">
+            {aiError || aiResponse || "Your AI insight summary will appear here."}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div id="App">
       <LiveDisplay
@@ -336,306 +703,23 @@ function App() {
       <div className="panel-shell">
         <div className="tab-row">
           {tabs.map((tab) => (
-            <label className="tab-toggle" key={tab.id}>
+            <label
+              className={`tab-toggle ${tab.variant === "ai" ? "tab-toggle-ai" : ""}`}
+              key={tab.id}
+            >
               <input
                 type="radio"
                 name="tabs"
                 checked={activeTab === tab.id}
-                onChange={() => setActiveTab(tab.id)}
+                onChange={() => handleTabChange(tab.id)}
               />
               <span>{tab.label}</span>
             </label>
           ))}
         </div>
 
-        <div className="settings-window">
-          {tabFields[activeTab].map((field) => {
-            if (typeof field === "string") {
-              const isFilingStatus = field === "Filing Status";
-              return (
-                <div className="settings-field" key={field}>
-                  <label>{field}</label>
-                  {isFilingStatus ? (
-                    <select
-                      value={draftValues[activeTab][field] || ""}
-                      onChange={(e) =>
-                        setDraftValues({
-                          ...draftValues,
-                          [activeTab]: {
-                            ...draftValues[activeTab],
-                            [field]: e.target.value
-                          }
-                        })
-                      }
-                      onBlur={() => commitField(activeTab, field)}
-                    >
-                      <option value="">Select filing status</option>
-                      <option value="Single">Single</option>
-                      <option value="Married">Married</option>
-                    </select>
-                  ) : (
-                    <input
-                      type="text"
-                      value={draftValues[activeTab][field] || ""}
-                      onChange={(e) =>
-                        setDraftValues({
-                          ...draftValues,
-                          [activeTab]: {
-                            ...draftValues[activeTab],
-                            [field]: e.target.value
-                          }
-                        })
-                      }
-                      onBlur={() => commitField(activeTab, field)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          commitField(activeTab, field);
-                          e.target.blur();
-                        }
-                      }}
-                      placeholder={`Enter ${field}`}
-                    />
-                  )}
-                </div>
-              );
-            }
-
-            if (field.dynamic) {
-              return (
-                <div className="settings-field" key={field.label}>
-                  <label>{field.label}</label>
-
-                  {draftValues.wants.Hobbies.map((hobby, index) => (
-                    <div key={index} className="hobby-row">
-                      <button
-                        type="button"
-                        className="remove-hobby-button"
-                        onClick={() => {
-                          const newDraft = draftValues.wants.Hobbies.filter(
-                            (_, i) => i !== index
-                          );
-                          const newCommitted = values.wants.Hobbies.filter(
-                            (_, i) => i !== index
-                          );
-
-                          setDraftValues({
-                            ...draftValues,
-                            wants: { ...draftValues.wants, Hobbies: newDraft }
-                          });
-
-                          setValues((prev) => {
-                            const next = {
-                              ...prev,
-                              wants: { ...prev.wants, Hobbies: newCommitted }
-                            };
-                            persistValues(next);
-                            return next;
-                          });
-                        }}
-                      >
-                        ×
-                      </button>
-
-                      <input
-                        type="text"
-                        placeholder="Hobby name"
-                        value={hobby.name || ""}
-                        onChange={(e) => {
-                          const updated = [...draftValues.wants.Hobbies];
-                          updated[index] = {
-                            ...updated[index],
-                            name: e.target.value
-                          };
-                          setDraftValues({
-                            ...draftValues,
-                            wants: { ...draftValues.wants, Hobbies: updated }
-                          });
-                        }}
-                        onBlur={() => commitHobby(index)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            commitHobby(index);
-                            e.target.blur();
-                          }
-                        }}
-                      />
-
-                      <input
-                        type="number"
-                        placeholder="Amount"
-                        value={hobby.amount || ""}
-                        onChange={(e) => {
-                          const updated = [...draftValues.wants.Hobbies];
-                          updated[index] = {
-                            ...updated[index],
-                            amount: e.target.value
-                          };
-                          setDraftValues({
-                            ...draftValues,
-                            wants: { ...draftValues.wants, Hobbies: updated }
-                          });
-                        }}
-                        onBlur={() => commitHobby(index)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            commitHobby(index);
-                            e.target.blur();
-                          }
-                        }}
-                      />
-                    </div>
-                  ))}
-
-                  <button
-                    type="button"
-                    className="add-hobby-button"
-                    onClick={() => {
-                      const newHobby = { name: "", amount: "" };
-
-                      setDraftValues({
-                        ...draftValues,
-                        wants: {
-                          ...draftValues.wants,
-                          Hobbies: [...draftValues.wants.Hobbies, newHobby]
-                        }
-                      });
-
-                      setValues({
-                        ...values,
-                        wants: {
-                          ...values.wants,
-                          Hobbies: [...values.wants.Hobbies, newHobby]
-                        }
-                      });
-                    }}
-                  >
-                    + Add Hobby
-                  </button>
-                </div>
-              );
-            }
-
-            if (field.dynamicSavings) {
-              return (
-                <div className="settings-field" key={field.label}>
-                  <label>{field.label}</label>
-
-                  {draftValues.savings.CustomAccounts.map((acct, index) => (
-                    <div key={index} className="hobby-row">
-                      <button
-                        type="button"
-                        className="remove-hobby-button"
-                        onClick={() => {
-                          const newDraft = draftValues.savings.CustomAccounts.filter(
-                            (_, i) => i !== index
-                          );
-                          const newCommitted = values.savings.CustomAccounts.filter(
-                            (_, i) => i !== index
-                          );
-
-                          setDraftValues({
-                            ...draftValues,
-                            savings: { ...draftValues.savings, CustomAccounts: newDraft }
-                          });
-
-                          setValues((prev) => {
-                            const next = {
-                              ...prev,
-                              savings: { ...prev.savings, CustomAccounts: newCommitted }
-                            };
-                            persistValues(next);
-                            return next;
-                          });
-                        }}
-                      >
-                        ×
-                      </button>
-
-                      <input
-                        type="text"
-                        placeholder="Account name"
-                        value={acct.name || ""}
-                        onChange={(e) => {
-                          const updated = [...draftValues.savings.CustomAccounts];
-                          updated[index] = {
-                            ...updated[index],
-                            name: e.target.value
-                          };
-                          setDraftValues({
-                            ...draftValues,
-                            savings: { ...draftValues.savings, CustomAccounts: updated }
-                          });
-                        }}
-                        onBlur={() => commitCustomAccount(index)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            commitCustomAccount(index);
-                            e.target.blur();
-                          }
-                        }}
-                      />
-
-                      <input
-                        type="number"
-                        placeholder="Amount"
-                        value={acct.amount || ""}
-                        onChange={(e) => {
-                          const updated = [...draftValues.savings.CustomAccounts];
-                          updated[index] = {
-                            ...updated[index],
-                            amount: e.target.value
-                          };
-                          setDraftValues({
-                            ...draftValues,
-                            savings: { ...draftValues.savings, CustomAccounts: updated }
-                          });
-                        }}
-                        onBlur={() => commitCustomAccount(index)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            commitCustomAccount(index);
-                            e.target.blur();
-                          }
-                        }}
-                      />
-                    </div>
-                  ))}
-
-                  <button
-                    type="button"
-                    className="add-hobby-button"
-                    onClick={() => {
-                      const newAccount = { name: "", amount: "" };
-
-                      setDraftValues({
-                        ...draftValues,
-                        savings: {
-                          ...draftValues.savings,
-                          CustomAccounts: [...draftValues.savings.CustomAccounts, newAccount]
-                        }
-                      });
-
-                      setValues((prev) => {
-                        const next = {
-                          ...prev,
-                          savings: {
-                            ...prev.savings,
-                            CustomAccounts: [...prev.savings.CustomAccounts, newAccount]
-                          }
-                        };
-                        persistValues(next);
-                        return next;
-                      });
-                    }}
-                  >
-                    + Add Account
-                  </button>
-                </div>
-              );
-            }
-
-            return null;
-          })}
+        <div className={`settings-window ${activeTab === "ai" ? "settings-window-ai" : ""}`}>
+          {activeTab === "ai" ? renderAiPanel() : renderStandardFields()}
         </div>
       </div>
     </div>

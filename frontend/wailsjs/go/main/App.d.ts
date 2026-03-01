@@ -7,6 +7,8 @@ export function CalcFicaTax(arg1:number):Promise<number>;
 
 export function CalcStateTax(arg1:number,arg2:string,arg3:string):Promise<number>;
 
+export function GenerateInsights(arg1:string):Promise<string>;
+
 export function Greet(arg1:string):Promise<string>;
 
 export function WriteToJson(arg1:Record<string, Record<string, any>>):Promise<void>;

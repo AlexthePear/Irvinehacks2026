@@ -14,6 +14,10 @@ export function CalcStateTax(arg1, arg2, arg3) {
   return window['go']['main']['App']['CalcStateTax'](arg1, arg2, arg3);
 }
 
+export function GenerateInsights(arg1) {
+  return window['go']['main']['App']['GenerateInsights'](arg1);
+}
+
 export function Greet(arg1) {
   return window['go']['main']['App']['Greet'](arg1);
 }
