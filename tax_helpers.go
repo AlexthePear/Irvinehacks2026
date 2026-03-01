@@ -37,8 +37,49 @@ var (
 	loadErr         error
 )
 
-// CalculateFederalTax computes federal tax owed for a taxable income and filing status using federal_tax_brackets.csv.
-func CalculateFederalTax(taxableIncome float64, filingStatus string) (float64, error) {
+// AGICalc computes Adjusted Gross Income for single or married joint filers.
+// Gross income minus deductible contributions, floored at zero.
+func AGICalc(grossIncome, contrib401k, iraContrib, hsaContrib float64) float64 {
+	agi := grossIncome - contrib401k - iraContrib - hsaContrib
+	if agi < 0 {
+		return 0
+	}
+	return agi
+}
+
+// FICATaxOwed computes Social Security + Medicare based on wages after HSA deduction.
+// Supports only single and married joint filing statuses.
+func FICATaxOwed(grossIncome, hsaContrib float64, filingStatus string) (float64, error) {
+	amt := grossIncome - hsaContrib
+	if amt < 0 {
+		amt = 0
+	}
+
+	socialWageBase := 184500.0 // 2024 SSA wage base
+	social := math.Min(amt, socialWageBase) * 0.062
+
+	status := normalizeStatus(filingStatus)
+	var medicareThreshold float64
+	switch status {
+	case "single":
+		medicareThreshold = 200000
+	case "married":
+		medicareThreshold = 250000
+	default:
+		return 0, fmt.Errorf("unsupported filing status for FICA: %s", filingStatus)
+	}
+
+	medicare := amt * 0.0145
+	if amt > medicareThreshold {
+		medicare += (amt - medicareThreshold) * 0.009 // additional 0.9% applies only above threshold
+	}
+
+	return social + medicare, nil
+}
+
+// FederalTaxOwed computes federal tax owed using AGI, applying standard deduction then brackets from CSV.
+// Only supports single and married joint filers.
+func FederalTaxOwed(agi float64, filingStatus string) (float64, error) {
 	loadFederalOnce.Do(func() {
 		federalTaxTables, loadErr = loadFederalBrackets("federal_tax_brackets.csv")
 	})
@@ -46,19 +87,29 @@ func CalculateFederalTax(taxableIncome float64, filingStatus string) (float64, e
 		return 0, loadErr
 	}
 
-	statusKey := normalizeStatus(filingStatus)
-	brackets, ok := federalTaxTables[statusKey]
-	if !ok {
+	status := normalizeStatus(filingStatus)
+	if status != "single" && status != "married" {
 		return 0, fmt.Errorf("unsupported filing status: %s", filingStatus)
 	}
 
+	standardDeductions := map[string]float64{
+		"single":  16100,
+		"married": 32200,
+	}
+
+	taxableIncome := agi - standardDeductions[status]
+	if taxableIncome < 0 {
+		taxableIncome = 0
+	}
+
+	brackets := federalTaxTables[status]
 	tax := computeProgressiveTax(taxableIncome, brackets)
 	return tax, nil
 }
 
-// CalculateStateTax computes state tax owed for a taxable income, state, and filing status using state_tax_brackets.csv.
-// It applies the state-level standard deduction (from the CSV) before computing the bracketed tax.
-func CalculateStateTax(taxableIncome float64, state string, filingStatus string) (float64, error) {
+// StateTaxOwed computes state tax owed using AGI, applying state deduction from CSV then brackets.
+// Only supports single and married joint filers.
+func StateTaxOwed(agi float64, state string, filingStatus string) (float64, error) {
 	loadStateOnce.Do(func() {
 		stateTaxTables, loadErr = loadStateBrackets("state_tax_brackets.csv")
 	})
@@ -71,12 +122,12 @@ func CalculateStateTax(taxableIncome float64, state string, filingStatus string)
 		return 0, fmt.Errorf("state not found: %s", state)
 	}
 
-	statusKey := normalizeStatus(filingStatus)
+	status := normalizeStatus(filingStatus)
 	var brackets []taxBracket
 	var deduction float64
 
-	switch statusKey {
-	case "single", "head_of_household":
+	switch status {
+	case "single":
 		brackets = table.singleBrackets
 		deduction = table.singleDeduction
 	case "married":
@@ -86,12 +137,12 @@ func CalculateStateTax(taxableIncome float64, state string, filingStatus string)
 		return 0, fmt.Errorf("unsupported filing status: %s", filingStatus)
 	}
 
-	adjustedIncome := taxableIncome - deduction
-	if adjustedIncome < 0 {
-		adjustedIncome = 0
+	taxableIncome := agi - deduction
+	if taxableIncome < 0 {
+		taxableIncome = 0
 	}
 
-	tax := computeProgressiveTax(adjustedIncome, brackets)
+	tax := computeProgressiveTax(taxableIncome, brackets)
 	return tax, nil
 }
 
