@@ -5,14 +5,13 @@ A desktop financial planning assistant that combines budgeting, tax-aware income
 
 # Screenshots
 ### Main Page
-<img width="1512" height="982" alt="Screenshot 2026-03-01 at 12 43 05 AM" src="https://github.com/user-attachments/assets/c45863ba-ea61-4e40-9553-a70c38f89773" />
+<img width="2838" height="1642" alt="ss1" src="https://github.com/user-attachments/assets/1bb6a235-cfff-4ff1-9fbc-52eee96b6f56" />
 
 ### Investments Page
-<img width="1512" height="982" alt="Screenshot 2026-03-01 at 12 43 20 AM" src="https://github.com/user-attachments/assets/a73745ba-9602-4375-8f4d-b1ee8074c52d" />
+<img width="2836" height="1642" alt="ss2" src="https://github.com/user-attachments/assets/dd6770df-2d0b-4593-b45c-de56ab08191d" />
 
 ### Graphs Preview
-<img width="1512" height="982" alt="Screenshot 2026-03-01 at 12 43 34 AM" src="https://github.com/user-attachments/assets/42166187-4ce1-4f3a-ad95-42529376322e" />
-
+<img width="2810" height="1610" alt="ss3" src="https://github.com/user-attachments/assets/c57eaa8b-ea87-4117-a41f-40864ec53dad" />
 
 # Table of Contents
 - [Project Title](#fincmd)
