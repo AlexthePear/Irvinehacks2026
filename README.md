@@ -1,16 +1,23 @@
-# Project Title
-Financial Planner
+# FinCmd
 
-# Elevator Pitch
+# Overview
 A desktop financial planning assistant that combines budgeting, tax-aware income modeling, investment forecasting, and AI-generated insights in a single native app experience. It helps users translate current financial choices into long-term outcomes with clear visual breakdowns and actionable guidance.
 
-# Spot for Screenshot
-![Screenshot Placeholder](./docs/screenshot-placeholder.png)
+# Screenshots
+### Main Page
+<img width="1512" height="982" alt="Screenshot 2026-03-01 at 12 43 05 AM" src="https://github.com/user-attachments/assets/c45863ba-ea61-4e40-9553-a70c38f89773" />
+
+### Investments Page
+<img width="1512" height="982" alt="Screenshot 2026-03-01 at 12 43 20 AM" src="https://github.com/user-attachments/assets/a73745ba-9602-4375-8f4d-b1ee8074c52d" />
+
+### Graphs Preview
+<img width="1512" height="982" alt="Screenshot 2026-03-01 at 12 43 34 AM" src="https://github.com/user-attachments/assets/42166187-4ce1-4f3a-ad95-42529376322e" />
+
 
 # Table of Contents
-- [Project Title](#project-title)
-- [Elevator Pitch](#elevator-pitch)
-- [Spot for Screenshot](#spot-for-screenshot)
+- [Project Title](#fincmd)
+- [Overview](#overview)
+- [Screenshots](#screenshots)
 - [Table of Contents](#table-of-contents)
 - [List of Features](#list-of-features)
 - [Installation Guide](#installation-guide)
