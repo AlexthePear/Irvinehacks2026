@@ -6,23 +6,24 @@
     "Years of Experience": ""
   },
   "comp": {
-    "Base Pay": "120000",
-    "Bonus": "",
+    "Base Pay": "150000",
+    "Bonus": "5000.04",
     "Filing Status": "",
     "Include RSU in Gross Income": false,
+    "Input Period": "annual",
     "Location (State)": "",
     "Misc": "",
-    "RSU": "500"
+    "RSU": "399.96"
   },
   "expenses": {
     "Debt Payments": "",
-    "Groceries": "",
+    "Groceries": "4800",
     "Healthcare": "",
-    "Housing": "",
+    "Housing": "48000",
     "Insurances": "",
     "Subscriptions": [],
     "Transportation": "",
-    "Utilities": ""
+    "Utilities": "1200"
   },
   "savings": {
     "401k": "",

@@ -51,6 +51,7 @@ const initialState = {
     Bonus: "",
     RSU: "",
     "Include RSU in Gross Income": false,
+    "Input Period": "annual",
     "Location (State)": "",
     "Filing Status": "",
     Misc: ""
@@ -117,7 +118,11 @@ const normalizeLoadedState = (loaded) => {
     comp: {
       ...initialState.comp,
       ...comp,
-      "Include RSU in Gross Income": Boolean(comp["Include RSU in Gross Income"])
+      "Include RSU in Gross Income": Boolean(comp["Include RSU in Gross Income"]),
+      "Input Period":
+        comp["Input Period"] === "monthly" || comp["Input Period"] === "annual"
+          ? comp["Input Period"]
+          : "annual"
     },
     savings: {
       ...initialState.savings,
@@ -275,6 +280,7 @@ function App() {
         const normalized = normalizeLoadedState(loaded);
         setValues(normalized);
         setDraftValues(normalized);
+        setIsMonthly(normalized.comp["Input Period"] === "monthly");
       } catch (err) {
         console.error("Failed to load output.json", err);
       }
@@ -484,9 +490,17 @@ function App() {
 
   const handleTogglePeriod = () => {
     const ratio = isMonthly ? 12 : 1 / 12;
-    setDraftValues((prev) => scaleStateByRatio(prev, ratio));
+    const nextPeriod = isMonthly ? "annual" : "monthly";
+    setDraftValues((prev) => {
+      const scaledDraft = scaleStateByRatio(prev, ratio);
+      return {
+        ...scaledDraft,
+        comp: { ...scaledDraft.comp, "Input Period": nextPeriod }
+      };
+    });
     setValues((prev) => {
-      const next = scaleStateByRatio(prev, ratio);
+      const scaled = scaleStateByRatio(prev, ratio);
+      const next = { ...scaled, comp: { ...scaled.comp, "Input Period": nextPeriod } };
       persistValues(next);
       return next;
     });
