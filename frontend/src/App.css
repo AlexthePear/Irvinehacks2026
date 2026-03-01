@@ -999,7 +999,7 @@ body::after {
 }
 
 .investments-page {
-    width: 100%;
+    width: min(var(--content-max-width), 100%);
     display: grid;
     gap: 24px;
 }

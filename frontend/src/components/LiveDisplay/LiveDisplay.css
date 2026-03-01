@@ -169,12 +169,12 @@
 
 .metric-card:nth-child(3)::after {
   background:
-    linear-gradient(90deg, rgba(68, 244, 255, 0), rgba(255, 224, 139, 0.82), rgba(68, 244, 255, 0.72), rgba(68, 244, 255, 0));
+    linear-gradient(90deg, rgba(255, 47, 146, 0), rgba(255, 47, 146, 0.84) 30%, rgba(68, 244, 255, 0.78) 74%, rgba(68, 244, 255, 0));
 }
 
 .metric-card:nth-child(4)::after {
   background:
-    linear-gradient(90deg, rgba(255, 47, 146, 0), rgba(255, 47, 146, 0.84), rgba(255, 224, 139, 0.72), rgba(255, 224, 139, 0));
+    linear-gradient(90deg, rgba(68, 244, 255, 0), rgba(68, 244, 255, 0.82) 26%, rgba(255, 47, 146, 0.8) 70%, rgba(255, 47, 146, 0));
 }
 
 .metric-label {

@@ -781,7 +781,7 @@ function InvestmentsPage({ savings, isMonthly }) {
 
                       <div className="settings-field investment-field">
                         <label htmlFor={`${account.id}-contrib`}>
-                          Additional contribution amount
+                          Contribution amount
                         </label>
                         <input
                           id={`${account.id}-contrib`}

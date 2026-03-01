@@ -887,9 +887,6 @@ function App() {
 
   const renderAiPanel = () => (
     <div className="ai-insights-panel">
-      {/* <div className="ai-actions">
-        Press Ctrl+S to refresh and cache your latest AI insights.
-      </div> */}
       <div className="ai-output-shell">
         <label className="ai-output-label">AI Insight Output</label>
         {shouldShowAiLoading ? (
